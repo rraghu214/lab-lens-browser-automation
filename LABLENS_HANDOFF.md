@@ -24,6 +24,30 @@
 
 ---
 
+## Build Status — 2026-06-11
+
+| Phase | Section | Status | Notes |
+|-------|---------|--------|-------|
+| Phase 1 | §3 Environment setup | ✅ Complete | All four setup items verified |
+| Phase 1 | §4 Foundation (run_trace, llm_client) | ✅ Complete | All five checklist items verified |
+| Phase 2 | §5 Browser cascade | ✅ / ⚠️ Partial | Layer routing confirmed; screenshots pending successful Layer 2b run |
+| Phase 2 | §6 Agent runner | ✅ Complete | All nine checklist items verified; `replay.json` written (`run_artifacts/77e0c26d/`) |
+| Phase 2 | §7 Distiller prompt | ✅ / ⚠️ Partial | All fields verified; `tsh_type` ultrasensitive rule in prompt but not live-tested (Thyrocare not in smoke test) |
+| — | Git / GitHub setup | ✅ Complete | Root `.gitignore`, `.env.example`, 74 files pushed to `github.com/rraghu214/lab-lens-browser-automation` |
+| Phase 3 | §8 NiceGUI frontend | ❌ Not started | |
+| Phase 4 | §9 Replay viewer | ❌ Not started | |
+| — | §10–12 Verification / GitHub / Demo | ❌ Not started | |
+
+**Structural decision (overrides §2 repo layout):** All LabLens files live inside `code/` — not a separate `lablens/` subfolder. `flow.py` and all its dependencies (`schemas.py`, `gateway.py`, `persistence.py`, etc.) already exist in `code/`, so a parallel copy would be missing them. `code/` is the working directory for all `python` commands.
+
+**Extra file (not in handoff):** `code/mini_gateway.py` — V9-compatible FastAPI proxy on port 8109, wrapping `LLMClient`. Required because `llm_gatewayV9` does not exist in this environment. Started automatically as a daemon thread by `agent_runner._ensure_gateway()`.
+
+**Root `.env` policy:** `llm_gatewayV9/main.py` loads `ROOT.parent / ".env"` (the project-root `.env`) on startup. The root `.env` must remain in place — it is the single source of truth for all provider keys. `code/.env` is a working-directory copy for `llm_client.py` standalone use; both are gitignored.
+
+**Smoke test run:** `run_artifacts/77e0c26d/replay.json` — Goal: "Thyroid Profile (T3, T4, TSH) price", Locality: "Koramangala, Bangalore". Metropolis: Layer 1 ✅ (1.51s, static HTML). 1mg: Layer 2b attempted, failed gracefully (Gemini rate-limited during test, 148.73s). Distiller: valid JSON output with dag_plan, comparison_rows, recommended, insights.
+
+---
+
 ## 1. Product overview
 
 ### 1.1 What LabLens does
@@ -173,10 +197,10 @@ python main.py
 
 ### 3.4 Setup checklist
 
-- [ ] `pip install` completes without errors
-- [ ] `python -m playwright install chromium` completes
-- [ ] `.env` created with at least `GEMINI_API_KEY` set
-- [ ] `python -c "from llm_client import LLMClient, load_env; load_env(); print(LLMClient.from_env().describe())"` prints at least one provider
+- ✅ `pip install` completes without errors
+- ✅ `python -m playwright install chromium` completes
+- ✅ `.env` created with at least `GEMINI_API_KEY` set
+- ✅ `python -c "from llm_client import LLMClient, load_env; load_env(); print(LLMClient.from_env().describe())"` prints at least one provider
 
 ---
 
@@ -284,11 +308,11 @@ await asyncio.sleep(2)  # keeps free tier RPM within limits
 
 ### 4.3 Foundation checklist
 
-- [ ] `run_trace.py` created
-- [ ] `RunTrace` instantiates without error: `python -c "from run_trace import RunTrace; t = RunTrace(goal='test'); print(t.run_id)"`
-- [ ] `RunTrace.save()` writes valid JSON, `RunTrace.load()` round-trips cleanly
-- [ ] Rate limit fix applied to `llm_client.py`
-- [ ] `llm_client.py` self-test passes: `python llm_client.py` returns `{"status": "ok"}` from at least one provider
+- ✅ `run_trace.py` created
+- ✅ `RunTrace` instantiates without error: `python -c "from run_trace import RunTrace; t = RunTrace(goal='test'); print(t.run_id)"`
+- ✅ `RunTrace.save()` writes valid JSON, `RunTrace.load()` round-trips cleanly
+- ✅ Rate limit fix applied to `llm_client.py`
+- ✅ `llm_client.py` self-test passes: `python llm_client.py` returns `{"status": "ok"}` from at least one provider
 
 ---
 
@@ -363,11 +387,11 @@ skills:
 
 ### 5.4 Browser cascade checklist
 
-- [ ] `artifacts_dir` changed to `./run_artifacts/{run_id}/{source_name}` in both layer files
-- [ ] `agent_config.yaml` updated with browser skill and distiller entries
-- [ ] Manual smoke test: run `layer1_extract.py` against `metropolisindia.com/parameter/bangalore/thyroid-panel-t3-t4-tsh` — confirms Layer 1 succeeds for Metropolis
-- [ ] Manual smoke test: run `layer2b_a11y.py` against `labs.1mg.com` — confirms Layer 2b needed (Layer 1 fails)
-- [ ] Screenshot files appear in `./run_artifacts/` after Layer 2b run
+- ⚠️ `artifacts_dir` changed to `./run_artifacts/{run_id}/{source_name}` in both layer files — `browser/` is DO NOT TOUCH; path is passed via `BrowserSkill(artifacts_root=...)` in `agent_runner.py` instead (equivalent outcome, different mechanism)
+- ✅ `agent_config.yaml` updated with browser skill entry and `lab_distiller` entry (note: added as `lab_distiller`, not `distiller`, to preserve the existing §8 general distiller)
+- ✅ Manual smoke test: Metropolis confirmed Layer 1 via `agent_runner.py` — 1.51s, static HTML extracted successfully (run `77e0c26d`)
+- ✅ Manual smoke test: 1mg correctly escalates past Layer 1 (JS-rendered; goal contains navigation verbs → `_is_useful_extract()` returns False → Layer 2b attempted)
+- ⚠️ Screenshot files appear in `./run_artifacts/` — Layer 2b was attempted for 1mg but all LLM providers were rate-limited during the test run; no navigation actions completed, so no screenshots were saved; will appear once Gemini quota is available
 
 ---
 
@@ -446,15 +470,15 @@ For Metropolis and 1mg, the goal prompt is sufficient for Layer 2b to navigate �
 
 ### 6.5 Agent runner checklist
 
-- [ ] `agent_runner.py` created
-- [ ] Sources run sequentially with `await asyncio.sleep(2)` between each
-- [ ] `cost_entry` appended to trace after every source
-- [ ] `SourceResult` appended to trace after every source
-- [ ] `log_push` called at every meaningful step using the prefix convention
-- [ ] Distiller called after all browser sources complete
-- [ ] `trace.dag_plan` populated from Distiller output
-- [ ] `replay.json` saved at `./run_artifacts/{run_id}/replay.json` on completion
-- [ ] End-to-end test (no UI): `python agent_runner.py` runs against all sources, `replay.json` written, contents valid
+- ✅ `agent_runner.py` created
+- ✅ Sources run sequentially with `await asyncio.sleep(2)` between each
+- ✅ `cost_entry` appended to trace after every source
+- ✅ `SourceResult` appended to trace after every source
+- ✅ `log_push` called at every meaningful step using the prefix convention
+- ✅ Distiller called after all browser sources complete
+- ✅ `trace.dag_plan` populated from Distiller output
+- ✅ `replay.json` saved at `./run_artifacts/{run_id}/replay.json` on completion
+- ✅ End-to-end test (no UI): `python agent_runner.py` against Metropolis + 1mg — all assertions pass; `replay.json` written to `run_artifacts/77e0c26d/`; comparison_rows, dag_plan, insights all populated
 
 ---
 
@@ -536,12 +560,12 @@ Write the following instructions into `distiller_prompt.md`:
 
 ### 7.4 Distiller checklist
 
-- [ ] `skills/distiller_prompt.md` created with output schema and all instruction rules
-- [ ] Test Distiller in isolation: pass mock raw_sources JSON, confirm output parses cleanly
-- [ ] `dag_plan` in output contains correct nodes and edges for the sources that ran
-- [ ] `tsh_type` field correctly set to `"ultrasensitive"` for Thyrocare
-- [ ] `recommended` field populated with a reason string
-- [ ] `insights` field is valid markdown within a JSON string (escaped newlines, no raw newlines)
+- ✅ `skills/distiller_prompt.md` created with output schema and all instruction rules
+- ⚠️ Test Distiller in isolation: verified via end-to-end run (output parses cleanly); isolated mock test with `raw_sources` fixture not run separately
+- ✅ `dag_plan` in output contains correct nodes and edges for the sources that ran (5 nodes, 5 edges for 2-source run)
+- ⚠️ `tsh_type` field correctly set to `"ultrasensitive"` for Thyrocare — normalisation rule is in the prompt; not live-tested because Thyrocare was not included in the smoke test
+- ✅ `recommended` field populated with a reason string
+- ✅ `insights` field is valid markdown within a JSON string (escaped `\n`, no raw newlines)
 
 ---
 
@@ -826,7 +850,7 @@ class ResultsPanel:
         self._rec_card.classes(add="hidden")
 ```
 
-### 8.5 Frontend checklist
+### 8.5 Frontend checklist ❌ Phase 3 — Not started
 
 - [ ] `main.py` starts without errors: `python main.py`
 - [ ] App loads at `http://localhost:8000` in dark mode
@@ -1003,7 +1027,7 @@ class ReplayViewer:
     # as defined in Sections 9.2, 9.3, 9.4
 ```
 
-### 9.6 Replay viewer checklist
+### 9.6 Replay viewer checklist ❌ Phase 4 — Not started
 
 - [ ] Static files mounted: `/artifacts` route serves `./run_artifacts/` correctly
 - [ ] After a run: open Replay tab — DAG Mermaid diagram renders
@@ -1120,12 +1144,12 @@ Vision: Gemini → GitHub (gpt-4.1-mini) → Ollama (if vision model)
 
 ### 11.3 GitHub checklist
 
-- [ ] Repo created at `github.com/rraghu214/lablens` and set to public
+- ✅ Repo created at `github.com/rraghu214/lab-lens-browser-automation` and set to public (note: URL differs from handoff — `lab-lens-browser-automation` not `lablens`)
 - [ ] `README.md` contains all 8 required sections
 - [ ] `ARCHITECTURE.md` written with all required sections
 - [ ] `replay.json` from the demo run committed under `run_artifacts/demo/`
-- [ ] `.env` is in `.gitignore` — never committed
-- [ ] `run_artifacts/` has a `.gitkeep` so the directory exists but large files are gitignored
+- ✅ `.env` is in `.gitignore` — never committed (root `.gitignore` + `code/.gitignore` both cover it)
+- ✅ `run_artifacts/` has a `.gitkeep` so the directory exists but large files are gitignored
 
 ---
 
