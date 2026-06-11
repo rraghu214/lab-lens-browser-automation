@@ -1,0 +1,32 @@
+[1]<a></a>
+[2]<a>MEDICINES</a>
+[3]<a>LAB TESTS</a>
+[4]<a>CONSULT DOCTORS</a>
+[5]<a>CANCER CARE</a>
+[6]<a>AYURVEDA</a>
+[7]<a>PARTNERSHIPS</a>
+[8]<a>CORPORATES</a>
+[9]<a>CARE PLAN</a>
+[10]<div role="link">Login</div>
+[11]<div role="link">Signup</div>
+[12]<a></a>
+[13]<a>Need Help?</a>
+[14]<input>Search city</input>
+[15]<button>Use your current location</button>
+[16]<input>Search tests or full body checkups</input>
+[17]<div role="button">Book via <b>Phone Call</b></div>
+[18]<div role="button">Quick <b>Order</b></div>
+[19]<div role="button">Book via <b>Whatsapp</b></div>
+[20]<a>Full Body Packages</a>
+[21]<a>X Rays, Scans & More</a>
+[22]<a>Fever Tests</a>
+[23]<a>Diabetes Tests</a>
+[24]<a>Vitamins Tests</a>
+[25]<a>Men</a>
+[26]<a>Women</a>
+[27]<a>Liver & Kidney</a>
+[28]<a>Thyroid</a>
+[29]<a>Hormones</a>
+[30]<a>Allergy</a>
+[31]<img>Location</img>
+[32]<img>Location current</img>

@@ -22,4 +22,4 @@ formatter: gemini
 retriever: github
 sandbox_executor: github
 coder: gemini
-browser: gemini
+browser: ~         # null → use gateway's default failover chain (cerebras → gemini → …)

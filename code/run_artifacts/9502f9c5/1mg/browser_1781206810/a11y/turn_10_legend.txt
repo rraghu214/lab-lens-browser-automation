@@ -1,0 +1,27 @@
+[1]<input>Koramangala, Bangalore</input>
+[2]<button>Use your current location</button>
+[3]<input>Search tests or full body checkups</input>
+[4]<button>Previous</button>
+[5]<button>Next</button>
+[6]<a>NHS. Underactive thyroid (hypothyroidism) [Internet]. NHS; 2025 Apr 28 [Accessed</a>
+[7]<a>NHS. Overactive thyroid (hyperthyroidism) - Symptoms [Internet]. NHS; 2023 Apr 1</a>
+[8]<input>Phone number</input>
+[9]<button>Get a free call back</button>
+[10]<button>Close</button>
+[11]<img>Location</img>
+[12]<img>Location current</img>
+[13]<div>Top Cities</div>
+[14]<div>No city found for your search!</div>
+[15]<div>Please enter a valid city name or click on ‘Use your current location’</div>
+[16]<span>Understanding the test</span>
+[17]<span>Test measures</span>
+[18]<span>FAQ's</span>
+[19]<span>City-wise pricing</span>
+[20]<span>Home collection</span>
+[21]<span>References</span>
+[22]<td>Price in</td>
+[23]<td>Lucknow</td>
+[24]<img>chevron right</img>
+[25]<td>Price in</td>
+[26]<td>Gurgaon</td>
+[27]<span>See more cities</span>

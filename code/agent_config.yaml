@@ -99,3 +99,17 @@ browser:
     chosen layer surfaced as output.path. Use when Researcher's
     fetch_url is insufficient: JavaScript-rendered content, interactive
     widgets, multi-page workflows.
+
+# ── LabLens additions (Session 9) ────────────────────────────────────────────
+# lab_distiller is called by agent_runner.py (not flow.py) to synthesise
+# the raw browser extracts into structured comparison_rows + insights.
+lab_distiller:
+  prompt: skills/distiller_prompt.md
+  temperature: 0.0
+  max_tokens: 4096
+  description: >
+    LabLens-specific distiller. Receives raw extracted text from all browser
+    sources and returns structured JSON: normalised comparison_rows, dag_plan,
+    recommended option, and markdown insights block. Called sequentially after
+    all browser sources complete. Inputs: raw_sources (list), goal, locality.
+    Outputs: dag_plan, comparison_rows, recommended, insights.

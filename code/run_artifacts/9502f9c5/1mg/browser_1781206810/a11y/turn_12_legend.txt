@@ -1,0 +1,22 @@
+[1]<input>New Delhi</input>
+[2]<input>Search tests or full body checkups</input>
+[3]<a>NHS. Underactive thyroid (hypothyroidism) [Internet]. NHS; 2025 Apr 28 [Accessed</a>
+[4]<a>NHS. Overactive thyroid (hyperthyroidism) - Symptoms [Internet]. NHS; 2023 Apr 1</a>
+[5]<a>American Thyroid Association. Vol. 7, Issue 7, p.5 [Internet]. ATA; [Accessed 27</a>
+[6]<a>Lichtiger A, Fadaei G, Tagoe CE. Autoimmune thyroid disease and rheumatoid arthr</a>
+[7]<a>Merck Group. Thyroid health [Internet]. Merck; [Accessed 27 Oct. 2025]. Availabl</a>
+[8]<a>Ronchetti G, Maiorana A, Mautone G, et al. Advances in thyroid function testing.</a>
+[9]<a>American Thyroid Association. Vol. 11, Issue 12, p.3-4 [Internet]. ATA; 2018 Dec</a>
+[10]<a>American Thyroid Association. Thyroid function tests [Internet]. ATA; [Accessed </a>
+[11]<a>Directorate of Health Services Kerala. Annual report [Internet]. 2018 May [Acces</a>
+[12]<input>Phone number</input>
+[13]<button>Get a free call back</button>
+[14]<button>Close</button>
+[15]<img>Location</img>
+[16]<img>Location current</img>
+[17]<span>Understanding the test</span>
+[18]<span>Test measures</span>
+[19]<span>FAQ's</span>
+[20]<span>City-wise pricing</span>
+[21]<span>Home collection</span>
+[22]<span>References</span>
