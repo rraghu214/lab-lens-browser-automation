@@ -1,0 +1,23 @@
+# secrets / env
+.env
+.env.*
+!.env.example
+
+# runtime state
+state/
+sandbox/
+usage.json
+
+# LabLens run artifacts (screenshots + replay JSON) — large, generated
+run_artifacts/**/*.png
+run_artifacts/**/*.json
+!run_artifacts/.gitkeep
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# os
+.DS_Store

@@ -1,0 +1,33 @@
+# ── Secrets — never commit ────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# ── Runtime databases (llm_gatewayV9) ────────────────────────────────────────
+**/*.db
+
+# ── Runtime logs ─────────────────────────────────────────────────────────────
+logs/
+
+# ── LabLens run artifacts (screenshots + replay JSON) ────────────────────────
+code/run_artifacts/**/*.png
+code/run_artifacts/**/*.json
+!code/run_artifacts/.gitkeep
+
+# ── Agent runtime state ───────────────────────────────────────────────────────
+code/state/
+code/sandbox/
+code/usage.json
+
+# ── Python ───────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
