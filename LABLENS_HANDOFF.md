@@ -24,27 +24,73 @@
 
 ---
 
-## Build Status — 2026-06-11
+## Build Status — 2026-06-12
 
 | Phase | Section | Status | Notes |
 |-------|---------|--------|-------|
 | Phase 1 | §3 Environment setup | ✅ Complete | All four setup items verified |
 | Phase 1 | §4 Foundation (run_trace, llm_client) | ✅ Complete | All five checklist items verified |
-| Phase 2 | §5 Browser cascade | ✅ / ⚠️ Partial | Layer routing confirmed; screenshots pending successful Layer 2b run |
-| Phase 2 | §6 Agent runner | ✅ Complete | All nine checklist items verified; `replay.json` written (`run_artifacts/77e0c26d/`) |
-| Phase 2 | §7 Distiller prompt | ✅ / ⚠️ Partial | All fields verified; `tsh_type` ultrasensitive rule in prompt but not live-tested (Thyrocare not in smoke test) |
-| — | Git / GitHub setup | ✅ Complete | Root `.gitignore`, `.env.example`, 74 files pushed to `github.com/rraghu214/lab-lens-browser-automation` |
-| Phase 3 | §8 NiceGUI frontend | ❌ Not started | |
-| Phase 4 | §9 Replay viewer | ❌ Not started | |
+| Phase 2 | §5 Browser cascade | ✅ / ⚠️ Partial | Layer routing confirmed; Layer 2b screenshots in `run_artifacts/1b048d65/` |
+| Phase 2 | §6 Agent runner | ✅ Complete | All nine checklist items verified; `replay.json` written |
+| Phase 2 | §7 Distiller prompt | ✅ / ⚠️ Partial | All fields verified; `tsh_type` rule in prompt; Thyrocare uTSH not live-tested (provider exhaustion) |
+| — | Git / GitHub setup | ✅ Complete | Root `.gitignore`, `.env.example`, pushed to `github.com/rraghu214/lab-lens-browser-automation` |
+| Phase 3 | §8 NiceGUI frontend | ✅ Complete | All §8.5 checklist items verified; see session notes below |
+| Phase 4 | §9 Replay viewer | ⚠️ Stub only | `replay_viewer.py` scaffolded; DAG/screenshots/cost not yet wired |
 | — | §10–12 Verification / GitHub / Demo | ❌ Not started | |
 
-**Structural decision (overrides §2 repo layout):** All LabLens files live inside `code/` — not a separate `lablens/` subfolder. `flow.py` and all its dependencies (`schemas.py`, `gateway.py`, `persistence.py`, etc.) already exist in `code/`, so a parallel copy would be missing them. `code/` is the working directory for all `python` commands.
+---
+
+### Session notes — 2026-06-12
+
+**Structural decision (overrides §2 repo layout):** All LabLens files live inside `code/` — not a separate `lablens/` subfolder. `flow.py` and all its dependencies (`schemas.py`, `gateway.py`, `persistence.py`, etc.) already exist in `code/`. `code/` is the working directory for all `python` commands.
 
 **Extra file (not in handoff):** `code/mini_gateway.py` — V9-compatible FastAPI proxy on port 8109, wrapping `LLMClient`. Required because `llm_gatewayV9` does not exist in this environment. Started automatically as a daemon thread by `agent_runner._ensure_gateway()`.
 
-**Root `.env` policy:** `llm_gatewayV9/main.py` loads `ROOT.parent / ".env"` (the project-root `.env`) on startup. The root `.env` must remain in place — it is the single source of truth for all provider keys. `code/.env` is a working-directory copy for `llm_client.py` standalone use; both are gitignored.
+**Root `.env` policy:** `llm_gatewayV9/main.py` loads `ROOT.parent / ".env"` (the project-root `.env`) on startup. Both root `.env` and `code/.env` (working-dir copy for `llm_client.py`) are gitignored.
 
-**Smoke test run:** `run_artifacts/77e0c26d/replay.json` — Goal: "Thyroid Profile (T3, T4, TSH) price", Locality: "Koramangala, Bangalore". Metropolis: Layer 1 ✅ (1.51s, static HTML). 1mg: Layer 2b attempted, failed gracefully (Gemini rate-limited during test, 148.73s). Distiller: valid JSON output with dag_plan, comparison_rows, recommended, insights.
+**Phase 3 deviations from spec:**
+
+| Area | Spec | Actual |
+|------|------|--------|
+| Theme | Dark mode default | Light mode default (`:root` = light vars; `body.ll-dark` = dark opt-in); toggle button added to header |
+| CSS | Tailwind-style classes | CSS custom properties (`--ll-bg`, `--ll-surface`, etc.) for theme-aware colours |
+| `run_agent` wiring | `asyncio.create_task(run_agent(...))` | **Must `await` directly** — `create_task()` discards NiceGUI's WebSocket client context; all `log.push()` calls are silently dropped from the wrong task. Fixed to `await result` in `_handle_run()` |
+| Column field names | `"home"`, `"tat"`, `"params"` | Actual distiller output uses `"home_collection"`, `"tat_hours"`, `"parameters"` — updated in `ONLINE_COLS`/`NEARBY_COLS` |
+| Boolean display | Raw `true`/`false` strings | Quasar `body-cell-home` / `body-cell-walk_in` slots render ✓ (green) / — (gray) |
+| Insights rendering | Pass string directly | LLM double-escapes newlines as `\\n` in JSON; `set_insights()` calls `md.replace('\\n', '\n')` before `set_content()` |
+| Duplicate rows | `append()` per source | `add_row()` upserts by provider — placeholder row (pre-distiller) is overwritten in-place when distiller row arrives |
+
+**Phase 3 agent runner improvements (this session):**
+
+- **Verbose per-source logging** — logs URL, layer type, LLM provider, and goal snippet before each source starts
+- **Heartbeat ticker** — `_run_with_ticker()` wraps `skill.run()` using `asyncio.wait({task}, timeout=20)` so every 20 s the main NiceGUI-context task logs elapsed time. Preserves client context because `log_push()` runs on the main task, not the skill's sibling task.
+- **LLM provider pin** — `a11y_provider_pin="ollama"` set in `BrowserSkill(...)` to skip cloud providers (openrouter/github RPD-maxed, groq/cerebras/gemini rate-limited, nvidia timing out at 180 s). Switch back to `None` once daily quotas reset — cerebras completes calls in ~3 s when available.
+
+**LLM provider state observed (2026-06-12):**
+
+| Provider | State | Notes |
+|----------|-------|-------|
+| openrouter | ❌ RPD maxed (50/50) | Resets daily |
+| github | ❌ RPD maxed (50/50) | Resets daily |
+| groq | ⚠️ Backoff + near RPD limit (86/1000) | |
+| cerebras | ⚠️ Backoff (40 s) | ~3 s/call when available — best option |
+| gemini | ⚠️ Backoff (40 s) | |
+| nvidia | ⚠️ 180 s latency → gateway timeout | deepseek-v4-flash; V9Client 120 s timeout fires before response |
+| ollama | ✅ Local, unlimited | gemma4:e4b, 32–67 s/call; reliable fallback |
+
+**Wall clock vs. actual elapsed:** `wall_clock_s=90.0` passed to `BrowserSkill` does not cap total elapsed time — sources can take 150–360 s when LLM calls queue through slow/failing providers. Hard timeout via `asyncio.wait_for()` is a future improvement.
+
+**Sample run artifacts:**
+- `run_artifacts/8aa9f3a1/` — Thyroid Profile, Koramangala, Bangalore (started 2026-06-12 08:53). Metropolis layer1 ✅ (1.36 s). All layer2b sources timed out (provider exhaustion). `replay.json` present; turn PNGs not available (deleted, reconstructed from session context).
+- `run_artifacts/1b048d65/` — Thyroid Profile, Koramangala, Bangalore (started 2026-06-12 10:53). Full run with all 8 sources. Layer 2b A11y turn PNGs committed for 1mg, Netmeds, Thyrocare, PharmEasy, Practo (turn screenshots), Google Maps.
+
+**Repository cleanup (2026-06-12):**
+- 9 verification screenshots moved from `code/` root → `docs/screenshots/`
+- 17 stale run artifact directories deleted; only `1b048d65` and `8aa9f3a1` retained
+- `.gitignore` updated: `code/run_artifacts/*/` ignores all future run directories; specific runs force-added with `git add -f`
+- `code/run_artifacts/.gitkeep` and `docs/screenshots/.gitkeep` added
+
+---
 
 ---
 
@@ -850,17 +896,20 @@ class ResultsPanel:
         self._rec_card.classes(add="hidden")
 ```
 
-### 8.5 Frontend checklist ❌ Phase 3 — Not started
+### 8.5 Frontend checklist ✅ Phase 3 — Complete (2026-06-12)
 
-- [ ] `main.py` starts without errors: `python main.py`
-- [ ] App loads at `http://localhost:8000` in dark mode
-- [ ] Three panels visible side-by-side
-- [ ] Query input accepts text, Run button triggers `_handle_run`
-- [ ] Log panel: `log_panel.push("test line")` appears immediately in UI
-- [ ] Log panel status badge changes IDLE → RUNNING → COMPLETE
-- [ ] Results table: `results_panel.add_row({...})` appends row without full refresh
-- [ ] Insights tab renders markdown correctly
-- [ ] Recent queries list updates after each run
+- ✅ `main.py` starts without errors: `python main.py`
+- ✅ App loads at `http://localhost:8000` — **light mode** by default (spec said dark; changed by design)
+- ✅ Three panels visible side-by-side (query 260px | log 320px | results flex-1)
+- ✅ Query input accepts text, Run button triggers `_handle_run` (async, direct await — not create_task)
+- ✅ Log panel: lines pushed via `log_panel.push()` appear immediately in UI; 20 s heartbeat ticks during long runs
+- ✅ Log panel status badge changes IDLE → RUNNING → COMPLETE / ERROR
+- ✅ Results table: `results_panel.add_row({...})` upserts by provider — placeholder shown immediately, overwritten by distiller row
+- ✅ Insights tab renders markdown correctly (`\\n` → `\n` normalisation applied)
+- ✅ Recent queries list updates after each run (last 5, deduped)
+- ✅ Dark/light toggle in header — persists via `localStorage`; `body.ll-dark` opt-in pattern
+- ✅ HOME and WALK-IN columns render ✓/— via Quasar body-cell slots (not raw booleans)
+- ✅ PRICE column renders `₹{value}` or `—` for null
 
 ---
 
@@ -1027,9 +1076,11 @@ class ReplayViewer:
     # as defined in Sections 9.2, 9.3, 9.4
 ```
 
-### 9.6 Replay viewer checklist ❌ Phase 4 — Not started
+### 9.6 Replay viewer checklist ⚠️ Phase 4 — Stub only
 
-- [ ] Static files mounted: `/artifacts` route serves `./run_artifacts/` correctly
+- ✅ Static files mounted: `app.add_static_files("/artifacts", "./run_artifacts")` in `main.py`
+- ✅ `replay_viewer.py` scaffolded — `ReplayViewer` class exists, `load(trace)` signature matches spec
+- ✅ `results_panel.set_replay(trace)` calls `replay_viewer.load(trace)` after run completes
 - [ ] After a run: open Replay tab — DAG Mermaid diagram renders
 - [ ] Per-source expansion: each source shows layer used, raw extracted data
 - [ ] Screenshot thumbnails appear for Layer 2b and Layer 3 sources
@@ -1037,6 +1088,8 @@ class ReplayViewer:
 - [ ] Cost ledger shows metric cards and table with correct totals
 - [ ] Save replay button writes `replay.json` to correct path
 - [ ] Load replay button re-populates entire Replay tab from file without re-running agent
+
+**Next step for Phase 4:** implement `_render_dag()`, `_render_screenshots()`, `_render_cost()` in `code/ui/replay_viewer.py` using the scaffolding in §9.2–9.4. The `RunTrace` is already passed correctly from `run_agent()` in `main.py`; just wire the containers.
 
 ---
 
@@ -1144,12 +1197,14 @@ Vision: Gemini → GitHub (gpt-4.1-mini) → Ollama (if vision model)
 
 ### 11.3 GitHub checklist
 
-- ✅ Repo created at `github.com/rraghu214/lab-lens-browser-automation` and set to public (note: URL differs from handoff — `lab-lens-browser-automation` not `lablens`)
+- ✅ Repo at `github.com/rraghu214/lab-lens-browser-automation` — public (URL differs from handoff spec: `lab-lens-browser-automation` not `lablens`)
 - [ ] `README.md` contains all 8 required sections
 - [ ] `ARCHITECTURE.md` written with all required sections
-- [ ] `replay.json` from the demo run committed under `run_artifacts/demo/`
-- ✅ `.env` is in `.gitignore` — never committed (root `.gitignore` + `code/.gitignore` both cover it)
-- ✅ `run_artifacts/` has a `.gitkeep` so the directory exists but large files are gitignored
+- ✅ Sample replay.json committed — `run_artifacts/8aa9f3a1/replay.json` and `run_artifacts/1b048d65/` (full run with PNGs)
+- ✅ `.env` never committed — root `.gitignore` covers both `code/.env` and root `.env`
+- ✅ `code/run_artifacts/.gitkeep` — directory tracked; future run subdirs ignored by `code/run_artifacts/*/` rule
+- ✅ Verification screenshots in `docs/screenshots/` (9 PNG files, committed 2026-06-12)
+- ✅ Latest commit: `7a8b0f8` — three commits total on `main`
 
 ---
 
