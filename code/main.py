@@ -198,4 +198,7 @@ async def run_agent(goal, locality, opts, log_panel, results_panel):
         ui.notify(f"Error: {str(exc)[:80]}", type="negative", position="top-right")
 
 
-ui.run(title="LabLens", port=8000, reload=False)
+try:
+    ui.run(title="LabLens", port=8000, reload=False)
+except KeyboardInterrupt:
+    pass

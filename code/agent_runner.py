@@ -89,13 +89,13 @@ def _build_turn_log(actions: list[dict]) -> list[TurnRecord]:
         records.append(TurnRecord(
             turn=int(step.get("turn", 0)),
             elements=0,
-            thinking="",
+            thinking=step.get("thinking", ""),
             actions=list(step.get("actions") or []),
             outcomes=[str(step.get("outcome", ""))],
-            provider="",
-            tokens_in=0,
-            tokens_out=0,
-            latency_ms=0,
+            provider=step.get("provider", ""),
+            tokens_in=int(step.get("tokens_in", 0)),
+            tokens_out=int(step.get("tokens_out", 0)),
+            latency_ms=int(step.get("latency_ms", 0)),
         ))
     return records
 
@@ -322,7 +322,9 @@ class AgentRunner:
                     raw_path = out.get("path", "extract")
                     layer = _PATH_TO_LAYER.get(raw_path, raw_path)
 
-            turns = int(out.get("turns") or 0)
+            turns   = int(out.get("turns")   or 0)
+            tok_in  = int(out.get("tok_in")  or 0)
+            tok_out = int(out.get("tok_out") or 0)
             actions = list(out.get("actions") or [])
             content = out.get("content") or ""
 
@@ -346,8 +348,8 @@ class AgentRunner:
                 blocked=blocked,
                 turn_log=_build_turn_log(actions),
                 extracted={"content": content[:8000]} if content else {},
-                tokens_in=0,
-                tokens_out=0,
+                tokens_in=tok_in,
+                tokens_out=tok_out,
                 elapsed_s=round(elapsed, 2),
             )
             trace.sources.append(sr)
@@ -357,8 +359,8 @@ class AgentRunner:
                 "source":    src_name,
                 "layer":     layer,
                 "turns":     turns,
-                "tok_in":    0,
-                "tok_out":   0,
+                "tok_in":    tok_in,
+                "tok_out":   tok_out,
                 "blocked":   blocked,
                 "elapsed_s": round(elapsed, 2),
             }

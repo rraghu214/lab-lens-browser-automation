@@ -361,11 +361,28 @@ class BrowserSkill:
 
     def _pack_driver(self, path, url, goal, drv_result,
                      *, final_url, elapsed) -> AgentResult:
+        steps = getattr(drv_result, "steps", []) or []
+        actions = [
+            {
+                "turn":       getattr(s, "turn", 0),
+                "thinking":   getattr(s, "thinking", ""),
+                "actions":    getattr(s, "actions", []),
+                "outcome":    getattr(s, "outcome", ""),
+                "provider":   getattr(s, "provider", ""),
+                "model":      getattr(s, "model", ""),
+                "latency_ms": getattr(s, "latency_ms", 0),
+                "tokens_in":  getattr(s, "tokens_in", 0),
+                "tokens_out": getattr(s, "tokens_out", 0),
+            }
+            for s in steps
+        ]
         out = BrowserOutput(
             url=url, goal=goal, path=path,
-            turns=getattr(drv_result, "turns", 0) or 0,
+            turns=len(steps),
+            tok_in=sum(getattr(s, "tokens_in", 0) for s in steps),
+            tok_out=sum(getattr(s, "tokens_out", 0) for s in steps),
             content=getattr(drv_result, "extracted", None) or None,
-            actions=getattr(drv_result, "actions", []) or [],
+            actions=actions,
             final_url=final_url,
         )
         return AgentResult(

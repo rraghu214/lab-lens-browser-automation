@@ -151,6 +151,8 @@ class BrowserOutput(BaseModel):
     goal: str
     path: Literal["extract", "deterministic", "a11y", "vision"]
     turns: int = 0
+    tok_in: int = 0
+    tok_out: int = 0
     content: str | None = None
     actions: list[dict] = Field(default_factory=list)
     final_url: str | None = None

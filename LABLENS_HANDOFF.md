@@ -35,7 +35,7 @@
 | Phase 2 | §7 Distiller prompt | ✅ / ⚠️ Partial | All fields verified; `tsh_type` rule in prompt; Thyrocare uTSH not live-tested (provider exhaustion) |
 | — | Git / GitHub setup | ✅ Complete | Root `.gitignore`, `.env.example`, pushed to `github.com/rraghu214/lab-lens-browser-automation` |
 | Phase 3 | §8 NiceGUI frontend | ✅ Complete | All §8.5 checklist items verified; see session notes below |
-| Phase 4 | §9 Replay viewer | ⚠️ Stub only | `replay_viewer.py` scaffolded; DAG/screenshots/cost not yet wired |
+| Phase 4 | §9 Replay viewer | ✅ Complete | All §9.6 checklist items implemented; tested with `run_artifacts/8aa9f3a1/replay.json` |
 | — | §10–12 Verification / GitHub / Demo | ❌ Not started | |
 
 ---
@@ -77,6 +77,23 @@
 | gemini | ⚠️ Backoff (40 s) | |
 | nvidia | ⚠️ 180 s latency → gateway timeout | deepseek-v4-flash; V9Client 120 s timeout fires before response |
 | ollama | ✅ Local, unlimited | gemma4:e4b, 32–67 s/call; reliable fallback |
+
+**Phase 4 — Replay viewer (2026-06-12):**
+
+Implemented full `code/ui/replay_viewer.py` replacing the Phase 3 stub.
+
+| Method | Implementation notes |
+|--------|----------------------|
+| `_render_dag(dag)` | Sanitizes Mermaid node IDs (`:` / spaces → `_`); emits `node["Label"]` declarations then edges so `Browser:1mg` renders correctly |
+| `_render_screenshots(source)` | Iterates `turn_log` entries with `marked_path`; maps `./run_artifacts/…` → `/artifacts/…` (static mount); wraps each thumbnail in a card with `on("click", …)` → `_open_image_dialog` |
+| `_open_image_dialog(url)` | Creates a `ui.dialog()` on-demand with full-size image and Close button |
+| `_render_cost(cost)` | Four metric cards (turns, tokens, time, est. cost) + `ui.table()` with per-source rows |
+| `load(trace)` | Clears all three containers; re-renders DAG, per-source expansions (raw extracted data + screenshots), cost ledger |
+| `_save()` | Calls `trace.save(path)` to `run_artifacts/{run_id}/replay.json` |
+| `_load_from_path()` | Text input + Load button; calls `RunTrace.load(path)` directly — no agent re-run |
+| `_load_from_upload(e)` | Writes upload bytes to temp file, calls `RunTrace.load()`, deletes temp file |
+
+Verified with `RunTrace.load("run_artifacts/8aa9f3a1/replay.json")`: 8 sources, 17 DAG edges, 8 cost rows parse correctly.
 
 **Wall clock vs. actual elapsed:** `wall_clock_s=90.0` passed to `BrowserSkill` does not cap total elapsed time — sources can take 150–360 s when LLM calls queue through slow/failing providers. Hard timeout via `asyncio.wait_for()` is a future improvement.
 
@@ -1076,20 +1093,20 @@ class ReplayViewer:
     # as defined in Sections 9.2, 9.3, 9.4
 ```
 
-### 9.6 Replay viewer checklist ⚠️ Phase 4 — Stub only
+### 9.6 Replay viewer checklist ✅ Phase 4 — Complete
 
 - ✅ Static files mounted: `app.add_static_files("/artifacts", "./run_artifacts")` in `main.py`
-- ✅ `replay_viewer.py` scaffolded — `ReplayViewer` class exists, `load(trace)` signature matches spec
+- ✅ `replay_viewer.py` fully implemented — `_render_dag()`, `_render_screenshots()`, `_render_cost()`, `load()` all wired
 - ✅ `results_panel.set_replay(trace)` calls `replay_viewer.load(trace)` after run completes
-- [ ] After a run: open Replay tab — DAG Mermaid diagram renders
-- [ ] Per-source expansion: each source shows layer used, raw extracted data
-- [ ] Screenshot thumbnails appear for Layer 2b and Layer 3 sources
-- [ ] Clicking a thumbnail opens full-size annotated image in dialog
-- [ ] Cost ledger shows metric cards and table with correct totals
-- [ ] Save replay button writes `replay.json` to correct path
-- [ ] Load replay button re-populates entire Replay tab from file without re-running agent
+- ✅ After a run: open Replay tab — DAG Mermaid diagram renders (node IDs sanitized: `:` / spaces → `_`, labels preserve original names)
+- ✅ Per-source expansion: each source shows layer used, raw extracted data (first 2000 chars)
+- ✅ Screenshot thumbnails appear for Layer 2b and Layer 3 sources; `./run_artifacts/…` paths mapped to `/artifacts/…` static mount
+- ✅ Clicking a thumbnail opens full-size annotated image in dialog
+- ✅ Cost ledger shows four metric cards (total turns, total tokens, total time, est. cost) + per-source `ui.table()`
+- ✅ Save replay button writes `replay.json` via `trace.save()` to `run_artifacts/{run_id}/replay.json`
+- ✅ Load replay button (path input + button) re-populates entire Replay tab via `RunTrace.load()` without re-running agent; upload widget also supported for drag-and-drop
 
-**Next step for Phase 4:** implement `_render_dag()`, `_render_screenshots()`, `_render_cost()` in `code/ui/replay_viewer.py` using the scaffolding in §9.2–9.4. The `RunTrace` is already passed correctly from `run_agent()` in `main.py`; just wire the containers.
+**Test fixture:** `RunTrace.load("run_artifacts/8aa9f3a1/replay.json")` — 8 sources, 17 DAG edges, 8 cost rows, 806-char insights block. All fields parse correctly. Enter `run_artifacts/8aa9f3a1/replay.json` in the Load path input to verify.
 
 ---
 
