@@ -10,10 +10,10 @@
 # ── Runtime logs ─────────────────────────────────────────────────────────────
 logs/
 
-# ── LabLens run artifacts (screenshots + replay JSON) ────────────────────────
-code/run_artifacts/**/*.png
-code/run_artifacts/**/*.json
-!code/run_artifacts/.gitkeep
+# ── LabLens run artifacts — ignore all generated run directories ──────────────
+# Each run creates code/run_artifacts/{run_id}/ at runtime; never commit those.
+# The parent folder is tracked via .gitkeep so the app can write into it.
+code/run_artifacts/*/
 
 # ── Agent runtime state ───────────────────────────────────────────────────────
 code/state/

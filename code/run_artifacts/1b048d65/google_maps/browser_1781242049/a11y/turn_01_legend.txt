@@ -1,0 +1,8 @@
+[1]<label>Search Google Maps</label>
+[2]<input role="combobox">q</input>
+[3]<button>Search</button>
+[4]<button>Directions</button>
+[5]<button>Menu</button>
+[6]<button> Saved</button>
+[7]<button> Recents</button>
+[8]<button> Get app</button>

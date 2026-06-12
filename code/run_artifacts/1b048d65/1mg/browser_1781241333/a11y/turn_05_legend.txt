@@ -1,0 +1,37 @@
+[1]<a></a>
+[2]<a>MEDICINES</a>
+[3]<a>LAB TESTS</a>
+[4]<a>CONSULT DOCTORS</a>
+[5]<a>CANCER CARE</a>
+[6]<a>AYURVEDA</a>
+[7]<a>PARTNERSHIPS</a>
+[8]<a>CORPORATES</a>
+[9]<a>CARE PLAN</a>
+[10]<div role="link">Login</div>
+[11]<div role="link">Signup</div>
+[12]<a></a>
+[13]<a>Need Help?</a>
+[14]<input>Bangalore</input>
+[15]<input>Thyroid Profile</input>
+[16]<a>Thyroid Profile Total (T3, T4 & TSH)</a>
+[17]<a>Thyroid Profile Free (FT3, FT4 & TSH)</a>
+[18]<a>Thyroid Comprehensive Package</a>
+[19]<a>Good Health Gold Package with Smart Report</a>
+[20]<a>Comprehensive Gold Full Body Checkup with Smart Report</a>
+[21]<a>Comprehensive Silver Full Body Checkup with Smart Report</a>
+[22]<div role="button">Book via <b>Phone Call</b></div>
+[23]<div role="button">Quick <b>Order</b></div>
+[24]<div role="button">Book via <b>Whatsapp</b></div>
+[25]<a>Full Body Packages</a>
+[26]<a>X Rays, Scans & More</a>
+[27]<a>Fever Tests</a>
+[28]<a>Diabetes Tests</a>
+[29]<a>Vitamins Tests</a>
+[30]<a>Men</a>
+[31]<a>Women</a>
+[32]<a>Liver & Kidney</a>
+[33]<a>Thyroid</a>
+[34]<a>Hormones</a>
+[35]<a>Allergy</a>
+[36]<img>Location</img>
+[37]<img>Location current</img>

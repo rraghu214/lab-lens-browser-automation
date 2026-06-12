@@ -1,0 +1,28 @@
+[1]<a></a>
+[2]<button>Check pincode</button>
+[3]<input>Thyroid Profile</input>
+[4]<button>Login</button>
+[5]<a>Book a test</a>
+[6]<a>Radiology</a>
+[7]<a>Labs Near Me</a>
+[8]<a>Become a Thyrocare Franchise</a>
+[9]<a>My Offers</a>
+[10]<button>Request Callback</button>
+[11]<a></a>
+[12]<a></a>
+[13]<a></a>
+[14]<a></a>
+[15]<span>PROFILE</span>
+[16]<span>Jaanch Thyroid Profile - Basic</span>
+[17]<span>PROFILE</span>
+[18]<span>Jaanch Thyroid Profile - Advanced</span>
+[19]<span>POP</span>
+[20]<span>Jaanch Thyroid Profile - Basic Plus</span>
+[21]<a>Partner with Thyrocare</a>
+[22]<div>Full Body Checkups</div>
+[23]<div>Hercheck Packages</div>
+[24]<div>Jaanch Packages</div>
+[25]<div>Diabetes</div>
+[26]<div>Heart</div>
+[27]<div>Fever</div>
+[28]<div>Cancer</div>

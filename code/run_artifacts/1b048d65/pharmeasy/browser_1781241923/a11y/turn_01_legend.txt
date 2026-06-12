@@ -1,0 +1,23 @@
+[1]<a></a>
+[2]<input>Search for Tests/Packages/Labs</input>
+[3]<button>Search</button>
+[4]<a>Download App</a>
+[5]<a>Offers</a>
+[6]<a>Cart</a>
+[7]<a>Medicine</a>
+[8]<a>Lab Tests</a>
+[9]<a>Health Blogs</a>
+[10]<a>PLUS</a>
+[11]<a>Value Store</a>
+[12]<a></a>
+[13]<a></a>
+[14]<a></a>
+[15]<a>All Tests</a>
+[16]<a>Buy 1 Get 1 FREE</a>
+[17]<a>Order on Call</a>
+[18]<a>Scan Prescription</a>
+[19]<a>Plus Save 5% on medicines, 50% on 1st lab test & get FREE delivery with PLUS mem</a>
+[20]<button>Go to next slide</button>
+[21]<p>Select Pincode</p>
+[22]<img></img>
+[23]<img></img>

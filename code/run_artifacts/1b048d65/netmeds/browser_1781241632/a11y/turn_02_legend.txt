@@ -1,0 +1,22 @@
+[1]<a></a>
+[2]<a></a>
+[3]<a></a>
+[4]<button>Close</button>
+[5]<button>Sign in to see your location</button>
+[6]<input></input>
+[7]<button>APPLY</button>
+[8]<a></a>
+[9]<a></a>
+[10]<a></a>
+[11]<a></a>
+[12]<a></a>
+[13]<a></a>
+[14]<a></a>
+[15]<a></a>
+[16]<a></a>
+[17]<a></a>
+[18]<img>Expand More</img>
+[19]<img>Detect my location</img>
+[20]<span></span>
+[21]<span></span>
+[22]<span></span>

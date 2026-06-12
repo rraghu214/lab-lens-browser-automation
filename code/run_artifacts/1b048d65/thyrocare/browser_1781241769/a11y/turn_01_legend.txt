@@ -1,0 +1,22 @@
+[1]<a></a>
+[2]<button>Check pincode</button>
+[3]<input>Search Tests, Packages</input>
+[4]<button>Login</button>
+[5]<a>Book a test</a>
+[6]<a>Radiology</a>
+[7]<a>Labs Near Me</a>
+[8]<a>Become a Thyrocare Franchise</a>
+[9]<a>My Offers</a>
+[10]<button>Request Callback</button>
+[11]<a></a>
+[12]<a></a>
+[13]<a></a>
+[14]<a></a>
+[15]<a>Partner with Thyrocare</a>
+[16]<div>Full Body Checkups</div>
+[17]<div>Hercheck Packages</div>
+[18]<div>Jaanch Packages</div>
+[19]<div>Diabetes</div>
+[20]<div>Heart</div>
+[21]<div>Fever</div>
+[22]<div>Cancer</div>

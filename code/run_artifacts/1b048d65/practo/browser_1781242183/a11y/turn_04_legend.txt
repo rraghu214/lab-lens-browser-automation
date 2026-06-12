@@ -1,0 +1,33 @@
+[1]<a>Go to practo.com homepage</a>
+[2]<a>About</a>
+[3]<a>Blog</a>
+[4]<a>Careers</a>
+[5]<a>Press</a>
+[6]<a>Contact</a>
+[7]<a>Ask free health questions</a>
+[8]<a>Search for doctors</a>
+[9]<a>Search for clinics</a>
+[10]<a>Health Feed</a>
+[11]<a>Consult a Doctor</a>
+[12]<a>Order medicines</a>
+[13]<a>Practo app</a>
+[14]<a>Health blog</a>
+[15]<a>Practo Consult</a>
+[16]<a>Practo Health Feed</a>
+[17]<a>Practo Profile</a>
+[18]<a>Ray by Practo</a>
+[19]<a>Practo Reach</a>
+[20]<a>Ray Tab</a>
+[21]<a>Practo Pro</a>
+[22]<a>Insta by Practo</a>
+[23]<a>Qikwell by Practo</a>
+[24]<a>Help</a>
+[25]<a>Developers</a>
+[26]<a>Privacy Policy</a>
+[27]<a>Terms & Conditions</a>
+[28]<a>Healthcare directory</a>
+[29]<a>Facebook</a>
+[30]<a>Twitter</a>
+[31]<a>LinkedIn</a>
+[32]<a>YouTube</a>
+[33]<a>GitHub</a>

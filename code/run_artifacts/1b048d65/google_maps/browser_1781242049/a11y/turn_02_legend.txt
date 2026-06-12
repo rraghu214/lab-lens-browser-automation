@@ -1,0 +1,28 @@
+[1]<input role="combobox">Koramangala</input>
+[2]<button>Search</button>
+[3]<button>Close</button>
+[4]<button> Restaurants</button>
+[5]<button> Hotels</button>
+[6]<button> Things to do</button>
+[7]<button> Museums</button>
+[8]<button> Transit</button>
+[9]<button> Pharmacies</button>
+[10]<button> ATMs</button>
+[11]<button>Next page</button>
+[12]<button>Menu</button>
+[13]<button> Saved</button>
+[14]<button> Recents</button>
+[15]<button> Get app</button>
+[16]<a role="button">Google apps</a>
+[17]<a>Sign in</a>
+[18]<button>Show Your Location</button>
+[19]<button>Zoom in</button>
+[20]<button>Zoom out</button>
+[21]<button>Browse Street View images</button>
+[22]<button>Layers</button>
+[23]<button>India</button>
+[24]<button>Terms</button>
+[25]<button>Privacy</button>
+[26]<button>Send Product Feedback</button>
+[27]<button>500 m</button>
+[28]<span></span>

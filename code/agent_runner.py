@@ -140,6 +140,37 @@ def _log_actions(actions: list[dict], log_push: Callable) -> None:
                 log_push(f"  Turn {turn_n}: {atype}({val!r})")
 
 
+async def _run_with_ticker(
+    coro,
+    src_name: str,
+    log_push: Callable[[str], None],
+    interval: float = 20.0,
+):
+    """Await a coroutine while logging elapsed time every `interval` seconds.
+
+    Uses asyncio.wait with a timeout so all log_push() calls remain on the
+    NiceGUI client-context task — no create_task()/ensure_future on the logger.
+    The skill coroutine runs in a sibling task (it doesn't need NiceGUI context).
+    """
+    t0 = time.time()
+    task = asyncio.ensure_future(coro)
+    try:
+        while not task.done():
+            done, _ = await asyncio.wait({task}, timeout=interval)
+            if not done:
+                elapsed = time.time() - t0
+                log_push(f"  ↻ {src_name}: still running... {elapsed:.0f}s elapsed")
+        return task.result()  # re-raises if the skill raised
+    except Exception:
+        if not task.done():
+            task.cancel()
+            try:
+                await task
+            except (asyncio.CancelledError, Exception):
+                pass
+        raise
+
+
 # ── AgentRunner ───────────────────────────────────────────────────────────────
 
 class AgentRunner:
@@ -188,8 +219,6 @@ class AgentRunner:
             src_url: str = src["url"]
             is_nearby = src_name in nearby_names
 
-            self.log_push(f"▶ Browser: {src_name}")
-
             # Artifacts directory for this source's screenshots
             safe_name = src_name.replace(" ", "_").lower()
             src_artifacts = artifacts_root / safe_name
@@ -199,27 +228,56 @@ class AgentRunner:
             if i > 0:
                 await asyncio.sleep(2)
 
+            layer_hint = src.get("layer_hint", "layer1")
+
+            self.log_push(f"▶ Browser: {src_name}")
+            self.log_push(f"  ↳ {src_url}")
+            if layer_hint == "layer2b":
+                self.log_push(
+                    f"  Layer 2b: LLM-guided navigation | provider: ollama | max 6 steps | cap 90s"
+                )
+            else:
+                self.log_push(f"  Layer 1: static HTML extract (trafilatura)")
+
             t0 = time.time()
             try:
                 skill = BrowserSkill(
                     artifacts_root=str(src_artifacts),
                     session=trace.run_id,
-                    a11y_provider_pin=None,
+                    # Pin to ollama (local): skips the failed cloud providers
+                    # (openrouter/github RPD-maxed, groq/cerebras/gemini rate-limited,
+                    # nvidia timing out at 180s). Ollama always responds in 32-67s.
+                    # Switch back to None once daily quotas reset and cerebras is available
+                    # (it does 1394 tokens in ~3s when not rate-limited).
+                    a11y_provider_pin="ollama",
+                    max_steps_a11y=6,     # 6 steps caps token spend; enough for most navigation
+                    wall_clock_s=90.0,
                 )
-                layer_hint = src.get("layer_hint", "layer1")
+                src_goal = _source_goal(src_name, goal, locality, layer_hint)
                 node = NodeSpec(
                     skill="browser",
                     inputs=[src_url],
                     metadata={
                         "url":  src_url,
-                        "goal": _source_goal(src_name, goal, locality, layer_hint),
+                        "goal": src_goal,
                     },
                 )
-                result = await skill.run(node)
+                if layer_hint == "layer2b":
+                    self.log_push(f"  Goal: {src_goal[:90]}...")
+                result = await _run_with_ticker(skill.run(node), src_name, self.log_push, interval=20.0)
             except Exception as exc:
                 import httpx as _httpx
                 elapsed = time.time() - t0
-                self.log_push(f"✗ {src_name} → error: {type(exc).__name__}: {str(exc)[:80]}")
+                if isinstance(exc, _httpx.HTTPStatusError):
+                    _code = exc.response.status_code
+                    _msg = f"gateway HTTP {_code} — LLM providers rate-limited or unavailable"
+                elif isinstance(exc, _httpx.TimeoutException):
+                    _msg = f"timeout after {elapsed:.0f}s — gateway or site unresponsive"
+                elif isinstance(exc, asyncio.CancelledError):
+                    _msg = f"cancelled after {elapsed:.0f}s"
+                else:
+                    _msg = f"{type(exc).__name__}: {str(exc)[:80]}"
+                self.log_push(f"✗ {src_name} → {_msg} ({elapsed:.0f}s total)")
                 # If the gateway returned 5xx OR timed out, the cascade attempted the
                 # correct layer (Layer 2b driver started, made a /v1/chat call) but the
                 # LLM backend failed or stalled. Record layer_hint so attribution is correct.
