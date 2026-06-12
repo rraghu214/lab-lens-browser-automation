@@ -35,7 +35,7 @@
 | Phase 2 | §7 Distiller prompt | ✅ / ⚠️ Partial | All fields verified; `tsh_type` rule in prompt; Thyrocare uTSH not live-tested (provider exhaustion) |
 | — | Git / GitHub setup | ✅ Complete | Root `.gitignore`, `.env.example`, pushed to `github.com/rraghu214/lab-lens-browser-automation` |
 | Phase 3 | §8 NiceGUI frontend | ✅ Complete | All §8.5 checklist items verified; see session notes below |
-| Phase 4 | §9 Replay viewer | ✅ Complete | All §9.6 checklist items implemented; tested with `run_artifacts/8aa9f3a1/replay.json` |
+| Phase 4 | §9 Replay viewer | ⚠️ Implemented / pending live run | UI complete; token/turn pipeline fixed; **full end-to-end run not yet done** — zeros in cost ledger until a fresh live run confirms the fix |
 | — | §10–12 Verification / GitHub / Demo | ❌ Not started | |
 
 ---
@@ -78,22 +78,55 @@
 | nvidia | ⚠️ 180 s latency → gateway timeout | deepseek-v4-flash; V9Client 120 s timeout fires before response |
 | ollama | ✅ Local, unlimited | gemma4:e4b, 32–67 s/call; reliable fallback |
 
-**Phase 4 — Replay viewer (2026-06-12):**
+**Phase 4 — Replay viewer initial implementation (2026-06-12 session 1):**
 
 Implemented full `code/ui/replay_viewer.py` replacing the Phase 3 stub.
 
 | Method | Implementation notes |
 |--------|----------------------|
-| `_render_dag(dag)` | Sanitizes Mermaid node IDs (`:` / spaces → `_`); emits `node["Label"]` declarations then edges so `Browser:1mg` renders correctly |
-| `_render_screenshots(source)` | Iterates `turn_log` entries with `marked_path`; maps `./run_artifacts/…` → `/artifacts/…` (static mount); wraps each thumbnail in a card with `on("click", …)` → `_open_image_dialog` |
-| `_open_image_dialog(url)` | Creates a `ui.dialog()` on-demand with full-size image and Close button |
-| `_render_cost(cost)` | Four metric cards (turns, tokens, time, est. cost) + `ui.table()` with per-source rows |
-| `load(trace)` | Clears all three containers; re-renders DAG, per-source expansions (raw extracted data + screenshots), cost ledger |
-| `_save()` | Calls `trace.save(path)` to `run_artifacts/{run_id}/replay.json` |
-| `_load_from_path()` | Text input + Load button; calls `RunTrace.load(path)` directly — no agent re-run |
-| `_load_from_upload(e)` | Writes upload bytes to temp file, calls `RunTrace.load()`, deletes temp file |
+| `_render_dag(dag)` | Sanitizes Mermaid node IDs (`:` / spaces → `_`); browser nodes wrapped in `subgraph Sources`; `rankSpacing: 120` via Mermaid init config |
+| `_render_meta(trace)` | Run heading card: run_id badge, goal, locality, start timestamp |
+| `_render_screenshots(source)` | Iterates `turn_log` entries with `marked_path`; maps `./run_artifacts/…` → `/artifacts/…`; context-aware "no screenshots" label per layer |
+| `_open_image_dialog(url)` | Creates `ui.dialog()` on-demand with full-size image and Close button |
+| `_render_cost(cost)` | Four metric cards (turns, tokens, time `Xm Ys`, est. cost `$0.00` + "free tier" subtitle); per-source `ui.table()` |
+| `load(trace)` | Clears all four containers; re-renders meta, DAG, per-source expansions, cost ledger |
+| `_render_source(source)` | Custom `ui.expansion` header slot with colored status badge (`green`/`orange`/`red`) and blue-grey layer badge |
+| `_save()` | Calls `trace.save()` to `run_artifacts/{run_id}/replay.json` |
+| `_load_from_path()` | Text input + Load button; calls `RunTrace.load(path)` — no agent re-run |
+| `_load_from_upload(e)` | NiceGUI 3.x: `await e.file.read()` (not `e.content`); writes to temp file; calls `RunTrace.load()`; `self._upload.reset()` after success |
 
-Verified with `RunTrace.load("run_artifacts/8aa9f3a1/replay.json")`: 8 sources, 17 DAG edges, 8 cost rows parse correctly.
+Helper functions: `_fmt_seconds(s)` → `"17m 17s"`; `_extracted_text(d)` unwraps `{'content': '...'}` to plain string.
+
+**Phase 4 — Token/turn pipeline fix (2026-06-12 session 2):**
+
+Root cause: `BrowserOutput` in `schemas.py` had no `tok_in`/`tok_out` fields; `_pack_driver()` in `browser/skill.py` used `getattr(drv_result, "turns"/"actions"/"extracted", …)` but `DriverResult` only has `.steps` — so `BrowserOutput.turns` was always 0, `actions` always `[]`, and all token counts were lost.
+
+| File | Change |
+|------|--------|
+| `schemas.py` | Added `tok_in: int = 0` and `tok_out: int = 0` to `BrowserOutput` |
+| `browser/skill.py` (`_pack_driver` only) | Reads `drv_result.steps`; sets `turns=len(steps)`, `tok_in/tok_out=sum(s.tokens_in/out)`, serializes each `StepRecord` to an action dict with all fields |
+| `agent_runner.py` | `_build_turn_log` reads `thinking`, `provider`, `tokens_in`, `tokens_out`, `latency_ms` from step dicts; main loop reads `tok_in`/`tok_out` from `out`; propagates to `SourceResult` and `cost_entry` |
+
+Effect: next live run will show real turn counts and token totals in the cost ledger and per-source `TurnRecord`s.
+
+**Phase 4 — Additional UI polish (2026-06-12 session 2):**
+
+| Issue | Fix |
+|-------|-----|
+| Upload widget stays open after load | `self._upload.reset()` in `_load_from_upload` |
+| "No screenshots (Layer 1 or blocked)" wrong for layer2b | Context-aware label: Layer 1 / blocked / turns ran but no PNGs / no turns completed |
+| `"$0.00 (free tier)"` wraps in card | Split: value `"$0.00"` + subtitle `"free tier"` on separate line |
+| `✗` renders as plain X in badge | Dropped symbol; badge text is just `"failed"` — red color conveys status |
+| DAG cramped and too small | `subgraph Sources` groups browser nodes; `min-height: 420px` on container; `rankSpacing: 120` |
+| No color on expansion headers | Custom header slot with `ui.badge()` per status; blue-grey layer badge |
+| Placeholder text truncated | Shortened to `"e.g. run_artifacts/8aa9f3a1/replay.json"` |
+| Raw extracted data showed Python dict repr | `_extracted_text()` unwraps `{'content': '...'}` to plain string |
+| Elapsed seconds hard to read | `_fmt_seconds()` formats both metric card and table column as `"17m 17s"` |
+| DAG too small to read | `min-height: 420px` on `_dag_container`; Mermaid `rankSpacing: 120` widens columns |
+| No run context visible | `_render_meta()` card above DAG with run_id, goal, locality, started |
+| Ctrl+C prints full traceback on Windows | `ui.run()` wrapped in `try/except KeyboardInterrupt: pass` in `main.py` |
+
+Committed as `daeb64a` — pushed to `github.com/rraghu214/lab-lens-browser-automation`.
 
 **Wall clock vs. actual elapsed:** `wall_clock_s=90.0` passed to `BrowserSkill` does not cap total elapsed time — sources can take 150–360 s when LLM calls queue through slow/failing providers. Hard timeout via `asyncio.wait_for()` is a future improvement.
 
@@ -1093,20 +1126,24 @@ class ReplayViewer:
     # as defined in Sections 9.2, 9.3, 9.4
 ```
 
-### 9.6 Replay viewer checklist ✅ Phase 4 — Complete
+### 9.6 Replay viewer checklist ⚠️ Phase 4 — Implemented, pending full live run
 
 - ✅ Static files mounted: `app.add_static_files("/artifacts", "./run_artifacts")` in `main.py`
-- ✅ `replay_viewer.py` fully implemented — `_render_dag()`, `_render_screenshots()`, `_render_cost()`, `load()` all wired
+- ✅ `replay_viewer.py` fully implemented — `_render_dag()`, `_render_screenshots()`, `_render_cost()`, `_render_meta()`, `load()` all wired
 - ✅ `results_panel.set_replay(trace)` calls `replay_viewer.load(trace)` after run completes
-- ✅ After a run: open Replay tab — DAG Mermaid diagram renders (node IDs sanitized: `:` / spaces → `_`, labels preserve original names)
-- ✅ Per-source expansion: each source shows layer used, raw extracted data (first 2000 chars)
-- ✅ Screenshot thumbnails appear for Layer 2b and Layer 3 sources; `./run_artifacts/…` paths mapped to `/artifacts/…` static mount
+- ✅ After a run: open Replay tab — DAG Mermaid diagram renders with `subgraph Sources`, `rankSpacing: 120`, `min-height: 420px`
+- ✅ Run metadata card shows run_id, goal, locality, start timestamp above DAG
+- ✅ Per-source expansion: colored status badge (green/orange/red), layer badge, raw extracted content (unwrapped from dict)
+- ✅ Screenshot thumbnails appear for Layer 2b and Layer 3 sources; `./run_artifacts/…` paths mapped to `/artifacts/…`
 - ✅ Clicking a thumbnail opens full-size annotated image in dialog
-- ✅ Cost ledger shows four metric cards (total turns, total tokens, total time, est. cost) + per-source `ui.table()`
-- ✅ Save replay button writes `replay.json` via `trace.save()` to `run_artifacts/{run_id}/replay.json`
-- ✅ Load replay button (path input + button) re-populates entire Replay tab via `RunTrace.load()` without re-running agent; upload widget also supported for drag-and-drop
+- ✅ Cost ledger: metric cards with `Xm Ys` elapsed formatting, `$0.00` + "free tier" subtitle; per-source table
+- ✅ Save replay button writes `replay.json` via `trace.save()`
+- ✅ Load replay (path input) and upload widget both work; upload auto-resets after load
+- ⏳ **Token/turn counts show real values** — pipeline fix implemented (`schemas.py`, `skill.py`, `agent_runner.py`) but **not yet verified on a live run** (existing `replay.json` fixtures have zeros from before the fix)
+- ⏳ **Screenshot thumbnails from live Layer 2b run** — confirmed working path mapping; waiting for a successful Layer 2b run to produce `marked_path` entries
+- ⏳ **Full end-to-end smoke test** — run agent → Replay tab shows DAG + turns + tokens + screenshots from the same run
 
-**Test fixture:** `RunTrace.load("run_artifacts/8aa9f3a1/replay.json")` — 8 sources, 17 DAG edges, 8 cost rows, 806-char insights block. All fields parse correctly. Enter `run_artifacts/8aa9f3a1/replay.json` in the Load path input to verify.
+**Next step:** do a full live run (`python main.py` → enter query → Run Search) and verify the Replay tab populates with real turn counts, token totals, and screenshots.
 
 ---
 
