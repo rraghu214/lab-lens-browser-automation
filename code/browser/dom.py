@@ -17,6 +17,7 @@ screenshot and `driver.py` references by `id` to dispatch actions.
 """
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, asdict
 from typing import Any
 
@@ -177,7 +178,20 @@ class PageSnapshot:
 
 
 async def enumerate_interactives(page: Page) -> PageSnapshot:
-    raw = await page.evaluate(_ENUMERATE_JS)
+    # Retry up to 3 times: SPAs (PharmEasy, Practo) replace the JS execution
+    # context after navigation, causing "Execution context was destroyed" on the
+    # first evaluate call. A short wait lets the new context stabilise.
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        try:
+            raw = await page.evaluate(_ENUMERATE_JS)
+            break
+        except Exception as exc:
+            last_exc = exc
+            if attempt < 2:
+                await asyncio.sleep(1.5)
+    else:
+        raise last_exc  # type: ignore[misc]
     els = [Element(**e) for e in raw["elements"]]
     return PageSnapshot(
         elements=els,

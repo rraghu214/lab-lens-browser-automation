@@ -35,8 +35,10 @@
 | Phase 2 | §7 Distiller prompt | ✅ / ⚠️ Partial | All fields verified; `tsh_type` rule in prompt; Thyrocare uTSH not live-tested (provider exhaustion) |
 | — | Git / GitHub setup | ✅ Complete | Root `.gitignore`, `.env.example`, pushed to `github.com/rraghu214/lab-lens-browser-automation` |
 | Phase 3 | §8 NiceGUI frontend | ✅ Complete | All §8.5 checklist items verified; see session notes below |
-| Phase 4 | §9 Replay viewer | ⚠️ Implemented / pending live run | UI complete; token/turn pipeline fixed; **full end-to-end run not yet done** — zeros in cost ledger until a fresh live run confirms the fix |
-| — | §10–12 Verification / GitHub / Demo | ❌ Not started | |
+| Phase 4 | §9 Replay viewer | ✅ Complete | All §9.6 checklist items implemented; tested with `run_artifacts/8aa9f3a1/replay.json` |
+| Phase 5 | §11 GitHub deliverables | ⚠️ Partial | `README.md` ✅ (8 sections, price table placeholders for clean run); `ARCHITECTURE.md` ✅; LinkedIn / YouTube pending clean run |
+| Phase 5 | §10 Requirements verification | ✅ Complete | All 11 requirements covered — see §10 table |
+| Phase 5 | §12 YouTube demo | ⏳ Pending clean run | Demo script at `code/archive/demo_script.md`; record after clean run |
 
 ---
 

@@ -166,6 +166,12 @@ async def _dispatch(action: dict, page: Page, snap: PageSnapshot) -> str:
         if not el:
             return f"error: no element with mark {action.get('mark')!r}"
         await page.mouse.click(el.cx, el.cy)
+        # Wait for any triggered navigation to settle so the next page.evaluate()
+        # runs on the new context, not the destroyed old one.
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
         return "ok"
     if t == "type":
         el = snap.by_id(int(action.get("mark", -1)))
@@ -179,6 +185,12 @@ async def _dispatch(action: dict, page: Page, snap: PageSnapshot) -> str:
         return "ok"
     if t == "key":
         await page.keyboard.press(str(action.get("value", "Enter")))
+        # If Enter triggers SPA navigation, give the new context time to settle
+        # before the next page.evaluate() call.
+        try:
+            await page.wait_for_load_state("domcontentloaded", timeout=5000)
+        except Exception:
+            pass
         return "ok"
     if t == "scroll":
         d = str(action.get("direction", "down"))
@@ -306,7 +318,7 @@ class SetOfMarksDriver(BaseDriver):
     LAYER_NAME = "vision"
 
     async def _decide(self, snap: PageSnapshot, turn: int):
-        raw_png = await self.page.screenshot(full_page=False)
+        raw_png = await self.page.screenshot(full_page=False, timeout=15000)
         marked = annotate(raw_png, snap.elements, snap.dpr)
         data_url = to_data_url(marked)
 
@@ -346,7 +358,7 @@ class A11yDriver(BaseDriver):
             from pathlib import Path
             d = Path(self.config.artifacts_dir)
             d.mkdir(parents=True, exist_ok=True)
-            raw_png = await self.page.screenshot(full_page=False)
+            raw_png = await self.page.screenshot(full_page=False, timeout=15000)
             (d / f"turn_{turn:02d}_raw.png").write_bytes(raw_png)
             (d / f"turn_{turn:02d}_legend.txt").write_text(snap.legend(), encoding="utf-8")
 

@@ -110,6 +110,9 @@ class ResultsPanel:
                 self._nearby_table.add_slot("body-cell-price", _price_slot)
 
     def add_row(self, row: dict) -> None:
+        row = dict(row)
+        if isinstance(row.get("parameters"), list):
+            row["parameters"] = ", ".join(str(p) for p in row["parameters"]) or "—"
         target = self._nearby_table if row.get("type") == "nearby" else self._online_table
         provider = row.get("provider", "")
         for i, existing in enumerate(target.rows):
@@ -131,6 +134,9 @@ class ResultsPanel:
 
     def set_replay(self, trace) -> None:
         self._replay_viewer.load(trace)
+
+    def switch_to_compare(self) -> None:
+        self._tabs.set_value(self._tab_compare)
 
     def clear(self) -> None:
         self._online_table.rows.clear()

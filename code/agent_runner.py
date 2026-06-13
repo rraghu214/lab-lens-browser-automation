@@ -26,19 +26,43 @@ load_env(".env")
 # ── Source catalogue ──────────────────────────────────────────────────────────
 
 ONLINE_SOURCES = [
-    # layer1: static HTML — trafilatura extracts prices directly from the page
-    {"name": "Metropolis", "url": "https://www.metropolisindia.com", "layer_hint": "layer1"},
-    # layer2b: JS-rendered — need a11y navigation to reach prices
-    {"name": "1mg",        "url": "https://www.1mg.com/labs",         "layer_hint": "layer2b"},
-    {"name": "Netmeds",    "url": "https://labs.netmeds.com",         "layer_hint": "layer2b"},
-    {"name": "Thyrocare",  "url": "https://www.thyrocare.com",        "layer_hint": "layer2b"},
-    {"name": "PharmEasy",  "url": "https://pharmeasy.in/diagnostics", "layer_hint": "layer2b"},
+    # disabled: city modal — a11y legend doesn't enumerate graphical city cards reliably
+    {"name": "Metropolis", "url": "https://www.metropolisindia.com", "layer_hint": "layer2b",
+     "disabled": True},
+    # ACTIVE: city selection works (turn 1-2 sets Bangalore), 503 on turn 3 was transient
+    {"name": "1mg", "url": "https://www.1mg.com/labs", "layer_hint": "layer2b",
+     "wall_clock_s": 90.0},
+    # disabled: 4-step pincode flow too fragile
+    {"name": "Thyrocare", "url": "https://www.thyrocare.com", "layer_hint": "layer2b",
+     "slow_load": True, "disabled": True},
+    # ACTIVE: search results show tests (no price in list, needs click) — skip pincode flow
+    {"name": "PharmEasy", "url": "https://pharmeasy.in/diagnostics", "layer_hint": "layer2b",
+     "slow_load": True, "wall_clock_s": 90.0},
+    # ACTIVE: Akamai wait fix works; price ₹420 visible in search list → call done immediately
+    {"name": "Practo", "url_template": "https://www.practo.com/tests?city={city}",
+     "layer_hint": "layer2b", "slow_load": True, "wall_clock_s": 180.0},
 ]
 
 NEARBY_SOURCES = [
-    {"name": "Google Maps", "url": "https://www.google.com/maps",                       "layer_hint": "layer2b"},
-    {"name": "Practo",      "url": "https://www.practo.com/bangalore/diagnostics",      "layer_hint": "layer1"},
-    {"name": "JustDial",    "url": "https://www.justdial.com/Bangalore",                "layer_hint": "layer1"},
+    # custom_goal: let the LLM derive an appropriate Maps search query from the user's goal
+    {
+        "name": "Google Maps",
+        "url":  "https://www.google.com/maps",
+        "layer_hint": "layer3",
+        "force_path": "vision",
+        "vision_provider": "ollama",
+        "custom_goal": (
+            "The user wants to find: '{goal}' near {locality}. "
+            "In the Google Maps search box, type a concise query — use only the test or panel name "
+            "and the locality (e.g. 'Thyroid Profile lab near Koramangala Bangalore'). "
+            "Press Enter to search. "
+            "Once the results appear, look at the LEFT PANEL showing the list of results — "
+            "DO NOT click into individual result cards. "
+            "From the visible results list, extract for the top 3-5 entries: "
+            "lab name, star rating, number of reviews, address, and any visible price or hours. "
+            "Call done with all extracted entries — this is sufficient, no need to click each card."
+        ),
+    },
 ]
 
 # BrowserOutput.path  →  SourceResult.layer
@@ -55,7 +79,30 @@ _DISTILLER_PROMPT = _SKILLS_DIR / "distiller_prompt.md"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _source_goal(source_name: str, goal: str, locality: str, layer_hint: str = "layer1") -> str:
+async def _resolve_pincode(locality: str) -> str | None:
+    """Resolve a human-readable locality to a 6-digit Indian postal code via
+    Nominatim (OpenStreetMap). Returns None if lookup fails or result is ambiguous."""
+    import httpx as _httpx
+    try:
+        async with _httpx.AsyncClient(timeout=8.0, headers={
+            "User-Agent": "LabLens/1.0 (lab-test price intelligence)"
+        }) as c:
+            r = await c.get(
+                "https://nominatim.openstreetmap.org/search",
+                params={"q": locality, "format": "json", "addressdetails": "1", "limit": "1"},
+            )
+            data = r.json()
+            if data and isinstance(data, list):
+                postcode = data[0].get("address", {}).get("postcode", "")
+                if postcode and postcode.strip().isdigit() and len(postcode.strip()) == 6:
+                    return postcode.strip()
+    except Exception:
+        pass
+    return None
+
+
+def _source_goal(source_name: str, goal: str, locality: str, layer_hint: str = "layer1",
+                 *, extra_hint: str = "") -> str:
     """Build the per-source goal string for the browser skill.
 
     For JS-rendered sources (layer_hint="layer2b"), the goal includes interactive
@@ -65,20 +112,36 @@ def _source_goal(source_name: str, goal: str, locality: str, layer_hint: str = "
     For static sources (layer_hint="layer1"), the goal is kept verb-free so
     Layer 1 extract succeeds when trafilatura finds useful content.
     """
+    city = locality.split(",")[-1].strip() if locality else ""
     loc_part = f" in {locality}" if locality else ""
     if layer_hint == "layer2b":
-        city_part = f"Select city '{locality}'" if locality else "Use the default city"
+        hint_part = f" {extra_hint}" if extra_hint else ""
+        # Strip parenthetical details and "price" keyword for a clean search term
+        search_term = goal.split("(")[0].replace("price", "").strip()
+        city_line = (
+            f"If the selected city or location is not {city!r}, change it to {city!r} first."
+            if city else ""
+        )
         return (
-            f"Navigate {source_name} to find: {goal}{loc_part}. "
-            f"{city_part}. Search for the test by name, click through to its detail page. "
-            f"Extract: price (INR), home collection availability, turnaround time (hours), "
-            f"parameters included (T3/T4/TSH), rating, review count."
+            f"On {source_name}: {city_line} "
+            f"Search for '{search_term}' in the test search box. "
+            f"After typing the test name, press Enter to submit. "
+            f"If pressing Enter has no effect and a dropdown of test names appears, "
+            f"click the most relevant item from that dropdown instead. "
+            f"CRITICAL: If the price (e.g. ₹420) is already visible in the search results list "
+            f"(the element name itself shows the price), call done IMMEDIATELY with that price — "
+            f"do NOT click the result to navigate to a detail page. "
+            f"Only click into a result if NO price is visible in the search list. "
+            f"Extract: price (INR), home collection (yes/no), TAT hours, test parameters, rating. "
+            f"Also note the names and any visible prices of 2-3 other relevant results from the search list. "
+            f"STOP HERE — call done as soon as you have the price and test details. "
+            f"Do NOT click 'Book Now', 'Add to Cart', or proceed to any checkout or booking form.{hint_part}"
         )
     # layer1 — simple goal, no interactive verbs
     return (
         f"Find {goal}{loc_part} on {source_name}. "
         f"Extract: price (INR), home collection availability, turnaround time, "
-        f"parameters included (T3/T4/TSH), rating."
+        f"test parameters included, rating."
     )
 
 
@@ -204,10 +267,16 @@ class AgentRunner:
         all_sources = sources + nearby
         nearby_names = {s["name"] for s in nearby}
 
+        # Resolve locality → pincode once (used by sources that need a postal code)
+        resolved_pincode: str | None = None
+        if locality:
+            resolved_pincode = await _resolve_pincode(locality)
+
         self.log_push(f"▶ LabLens run {trace.run_id}")
         self.log_push(f"  Goal: {goal}")
         if locality:
-            self.log_push(f"  Locality: {locality}")
+            pin_note = f" (pincode: {resolved_pincode})" if resolved_pincode else " (pincode: unresolved)"
+            self.log_push(f"  Locality: {locality}{pin_note}")
         self.log_push(f"  Sources queued: {len(all_sources)}")
 
         # Import here to avoid circular import at module level (BrowserSkill
@@ -215,8 +284,16 @@ class AgentRunner:
         from browser.skill import BrowserSkill
 
         for i, src in enumerate(all_sources):
+            if src.get("disabled"):
+                self.log_push(f"⊘ {src['name']} — disabled (skipped)")
+                continue
             src_name: str = src["name"]
-            src_url: str = src["url"]
+            # Resolve url_template (e.g. Practo city param) from locality at runtime
+            if "url_template" in src:
+                city_slug = (locality or "").split(",")[-1].strip().lower().replace(" ", "")
+                src_url = src["url_template"].format(city=city_slug)
+            else:
+                src_url = src["url"]
             is_nearby = src_name in nearby_names
 
             # Artifacts directory for this source's screenshots
@@ -230,11 +307,21 @@ class AgentRunner:
 
             layer_hint = src.get("layer_hint", "layer1")
 
+            if is_nearby and i == len(sources):
+                self.log_push("─" * 38)
+                self.log_push("  NEARBY LABS")
+                self.log_push("─" * 38)
+
             self.log_push(f"▶ Browser: {src_name}")
             self.log_push(f"  ↳ {src_url}")
-            if layer_hint == "layer2b":
+            cap_s = src.get("wall_clock_s", 120.0)
+            if src.get("force_path") == "vision":
                 self.log_push(
-                    f"  Layer 2b: LLM-guided navigation | provider: ollama | max 6 steps | cap 90s"
+                    f"  Layer 3: vision navigation (ollama/{src.get('vision_provider','ollama')}) | max {src.get('max_steps', 10)} steps | cap {cap_s:.0f}s"
+                )
+            elif layer_hint == "layer2b":
+                self.log_push(
+                    f"  Layer 2b: LLM-guided navigation | max {src.get('max_steps', 10)} steps | cap {cap_s:.0f}s"
                 )
             else:
                 self.log_push(f"  Layer 1: static HTML extract (trafilatura)")
@@ -244,23 +331,32 @@ class AgentRunner:
                 skill = BrowserSkill(
                     artifacts_root=str(src_artifacts),
                     session=trace.run_id,
-                    # Pin to ollama (local): skips the failed cloud providers
-                    # (openrouter/github RPD-maxed, groq/cerebras/gemini rate-limited,
-                    # nvidia timing out at 180s). Ollama always responds in 32-67s.
-                    # Switch back to None once daily quotas reset and cerebras is available
-                    # (it does 1394 tokens in ~3s when not rate-limited).
-                    a11y_provider_pin="ollama",
-                    max_steps_a11y=6,     # 6 steps caps token spend; enough for most navigation
-                    wall_clock_s=90.0,
+                    a11y_provider_pin="ollama",   # local model, no rate limits; remote providers all 429
+                    vision_provider_pin=src.get("vision_provider"),
+                    max_steps_a11y=src.get("max_steps", 10),
+                    wall_clock_s=src.get("wall_clock_s", 120.0),  # real cap enforced in skill
+                    slow_load=src.get("slow_load", False),
                 )
-                src_goal = _source_goal(src_name, goal, locality, layer_hint)
+                # custom_goal (e.g. Google Maps) overrides the generic goal builder
+                raw_custom = src.get("custom_goal", "")
+                if raw_custom:
+                    src_goal = raw_custom.format(goal=goal, locality=locality or "")
+                else:
+                    # Combine source-level extra_hint with pincode hint if applicable
+                    extra = src.get("extra_hint", "")
+                    if src.get("needs_pincode") and resolved_pincode:
+                        extra += (
+                            f" The Bangalore pincode is {resolved_pincode} — "
+                            f"when a PIN Code input field appears, type {resolved_pincode} and click the Check/Confirm button."
+                        )
+                    src_goal = _source_goal(src_name, goal, locality, layer_hint, extra_hint=extra.strip())
+                node_meta: dict = {"url": src_url, "goal": src_goal}
+                if src.get("force_path"):
+                    node_meta["force_path"] = src["force_path"]
                 node = NodeSpec(
                     skill="browser",
                     inputs=[src_url],
-                    metadata={
-                        "url":  src_url,
-                        "goal": src_goal,
-                    },
+                    metadata=node_meta,
                 )
                 if layer_hint == "layer2b":
                     self.log_push(f"  Goal: {src_goal[:90]}...")
@@ -287,14 +383,33 @@ class AgentRunner:
                     err_layer = src.get("layer_hint", "layer1")
                 else:
                     err_layer = "error"
+                # Recover partial turn/token data attached by BrowserSkill._drive()
+                # when the exception occurred mid-run (e.g. gateway 503 after N turns).
+                _partial = getattr(exc, '_partial_steps', [])
+                _p_turns   = len(_partial)
+                _p_tok_in  = sum(int(getattr(s, 'tokens_in',  0)) for s in _partial)
+                _p_tok_out = sum(int(getattr(s, 'tokens_out', 0)) for s in _partial)
+                _p_tlog = _build_turn_log([
+                    {
+                        "turn":       getattr(s, "turn",       0),
+                        "thinking":   getattr(s, "thinking",   ""),
+                        "actions":    getattr(s, "actions",    []),
+                        "outcome":    getattr(s, "outcome",    ""),
+                        "provider":   getattr(s, "provider",   ""),
+                        "tokens_in":  getattr(s, "tokens_in",  0),
+                        "tokens_out": getattr(s, "tokens_out", 0),
+                        "latency_ms": getattr(s, "latency_ms", 0),
+                    }
+                    for s in _partial
+                ])
                 trace.sources.append(SourceResult(
                     name=src_name, layer=err_layer, success=False, blocked=False,
-                    turn_log=[], extracted={}, tokens_in=0, tokens_out=0,
+                    turn_log=_p_tlog, extracted={}, tokens_in=_p_tok_in, tokens_out=_p_tok_out,
                     elapsed_s=round(elapsed, 2),
                 ))
                 trace.cost.append({
                     "source": src_name, "layer": err_layer,
-                    "turns": 0, "tok_in": 0, "tok_out": 0,
+                    "turns": _p_turns, "tok_in": _p_tok_in, "tok_out": _p_tok_out,
                     "blocked": False, "elapsed_s": round(elapsed, 2),
                 })
                 continue
@@ -329,15 +444,20 @@ class AgentRunner:
             content = out.get("content") or ""
 
             # Log outcome
+            layer_path_str = out.get("layer_path", "")
             if blocked:
                 self.log_push(f"✗ {src_name} → gateway_blocked")
             elif result.success:
                 self.log_push(f"  Layer 1 {'✓' if layer == 'layer1' else '↑ → ' + layer} — {turns} turns")
+                if layer_path_str:
+                    self.log_push(f"  Path: {layer_path_str}")
                 _log_actions(actions, self.log_push)
                 snippet = content[:120].replace("\n", " ")
                 self.log_push(f"✓ {src_name} → {layer} | {turns} turns | {snippet}")
             else:
                 self.log_push(f"  Layer: {layer} — failed after {turns} turns")
+                if layer_path_str:
+                    self.log_push(f"  Path: {layer_path_str}")
                 self.log_push(f"✗ {src_name} → {layer} failed: {(result.error or '')[:80]}")
 
             # Build SourceResult
@@ -351,6 +471,7 @@ class AgentRunner:
                 tokens_in=tok_in,
                 tokens_out=tok_out,
                 elapsed_s=round(elapsed, 2),
+                layer_path=layer_path_str,
             )
             trace.sources.append(sr)
 
@@ -364,6 +485,8 @@ class AgentRunner:
                 "blocked":   blocked,
                 "elapsed_s": round(elapsed, 2),
             }
+            if layer_path_str:
+                cost_entry["layer_path"] = layer_path_str
             trace.cost.append(cost_entry)
 
             # Notify UI: send a placeholder row (Distiller will fill real prices later)

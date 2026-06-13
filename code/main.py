@@ -161,13 +161,30 @@ async def index():
         ):
             results_panel = ResultsPanel()
 
-    # Wire: pass the coroutine factory; _handle_run will create_task it
+    # Wire: run search
     query_panel.on_run(
-        lambda goal, locality, opts: run_agent(goal, locality, opts, log_panel, results_panel)
+        lambda goal, locality, opts: run_agent(goal, locality, opts, log_panel, results_panel, query_panel)
+    )
+    # Wire: stop running search
+    query_panel.on_stop(lambda: stop_agent())
+    # Wire: load a previous run from the Recent list
+    query_panel.on_load_replay(
+        lambda run_id: load_replay_from_disk(run_id, log_panel, results_panel)
     )
 
 
-async def run_agent(goal, locality, opts, log_panel, results_panel):
+_current_run_task: "asyncio.Task | None" = None
+
+
+def stop_agent() -> None:
+    global _current_run_task
+    if _current_run_task and not _current_run_task.done():
+        _current_run_task.cancel()
+
+
+async def run_agent(goal, locality, opts, log_panel, results_panel, query_panel):
+    import asyncio
+    global _current_run_task
     from agent_runner import AgentRunner
     from run_trace import RunTrace
     import pathlib
@@ -175,6 +192,7 @@ async def run_agent(goal, locality, opts, log_panel, results_panel):
     log_panel.clear()
     results_panel.clear()
     log_panel.set_status("RUNNING")
+    query_panel.set_running(True)
     ui.notify(f"Search started: {goal[:60]}", type="info", position="top-right", timeout=2000)
 
     trace = RunTrace(goal=goal, locality=locality)
@@ -187,15 +205,52 @@ async def run_agent(goal, locality, opts, log_panel, results_panel):
             on_source_complete=results_panel.add_row,
             options=opts,
         )
-        await runner.run(trace, artifacts_root)
+        _current_run_task = asyncio.ensure_future(runner.run(trace, artifacts_root))
+        await _current_run_task
         results_panel.set_insights(trace.insights)
         results_panel.set_replay(trace)
         log_panel.set_status("COMPLETE")
         ui.notify("Search complete", type="positive", position="top-right", timeout=3000)
+        query_panel.refresh_recent()
+    except asyncio.CancelledError:
+        log_panel.push("⬛ Run cancelled by user")
+        log_panel.set_status("STOPPED")
+        ui.notify("Run stopped", type="warning", position="top-right", timeout=2000)
     except Exception as exc:
         log_panel.push(f"✗ Fatal: {type(exc).__name__}: {str(exc)[:120]}")
         log_panel.set_status("ERROR")
         ui.notify(f"Error: {str(exc)[:80]}", type="negative", position="top-right")
+    finally:
+        _current_run_task = None
+        query_panel.set_running(False)
+
+
+async def load_replay_from_disk(run_id: str, log_panel, results_panel) -> None:
+    from run_trace import RunTrace
+    import pathlib
+
+    path = pathlib.Path(f"./run_artifacts/{run_id}/replay.json")
+    if not path.exists():
+        ui.notify(f"Replay not found for run {run_id}", type="negative")
+        return
+    try:
+        trace = RunTrace.load(str(path))
+        log_panel.clear()
+        log_panel.push(f"▶ Loaded run {run_id}")
+        log_panel.push(f"  Goal: {trace.goal}")
+        if trace.locality:
+            log_panel.push(f"  Locality: {trace.locality}")
+        log_panel.push(f"  Sources: {len(trace.sources)}")
+        log_panel.set_status("COMPLETE")
+        results_panel.clear()
+        for row in (trace.comparison_rows or []):
+            results_panel.add_row(row)
+        results_panel.set_insights(trace.insights or "")
+        results_panel.set_replay(trace)
+        results_panel.switch_to_compare()
+        ui.notify(f"Loaded run {run_id[:8]}", type="positive", position="top-right", timeout=2000)
+    except Exception as exc:
+        ui.notify(f"Load failed: {exc}", type="negative")
 
 
 try:

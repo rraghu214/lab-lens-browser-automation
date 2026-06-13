@@ -61,6 +61,9 @@ _GATEWAY_BLOCK_MARKERS = (
     ("cloudflare",             "Checking your browser before accessing"),
     ("cloudflare",             "cf-browser-verification"),
     ("cloudflare",             "cf-challenge-running"),
+    # Akamai WAF (e.g. Practo) — JS countdown page before site loads.
+    ("akamai_waf",             "AkamaiGHost"),
+    ("akamai_waf",             "_abck"),
     # Login walls.  Conservative — only the literal sign-in-required pages.
     ("login_wall",             "You must be logged in"),
     ("login_wall",             "Sign in to continue"),
@@ -130,7 +133,8 @@ class BrowserSkill:
                  max_steps_a11y: int = 12,
                  max_steps_vision: int = 12,
                  wall_clock_s: float = 90.0,
-                 session: str | None = None):
+                 session: str | None = None,
+                 slow_load: bool = False):
         self.gateway_url = gateway_url
         self.agent_tag = agent_tag
         self.a11y_provider_pin = a11y_provider_pin
@@ -139,6 +143,7 @@ class BrowserSkill:
         self.max_steps_a11y = max_steps_a11y
         self.max_steps_vision = max_steps_vision
         self.wall_clock_s = wall_clock_s
+        self.slow_load = slow_load
         # Forwarded to V9 so the gateway ledger can attribute each call to
         # the orchestrator session that drove it.
         self.session = session
@@ -169,6 +174,7 @@ class BrowserSkill:
         # a real browser session that they refuse via bare GET. Falling
         # through to the Playwright layers lets _drive() detect the rendered
         # CAPTCHA and surface gateway_blocked properly.
+        _layers_tried: list[str] = []
         layer1_http_error: str | None = None
         try:
             html, final_url = await _fetch_html(url)
@@ -181,12 +187,17 @@ class BrowserSkill:
             if block:
                 return self._pack_error(url, goal, "gateway_blocked",
                                         f"gateway_blocked: {block} marker on {final_url}",
-                                        elapsed=time.time() - t0)
+                                        elapsed=time.time() - t0,
+                                        layer_path="Layer 1")
+            _layers_tried.append("Layer 1")
             content = _extract(html)
             if _is_useful_extract(content, goal):
                 return self._pack(url, goal, "extract", turns=0,
                                   content=content, final_url=final_url,
-                                  elapsed=time.time() - t0)
+                                  elapsed=time.time() - t0,
+                                  layer_path="Layer 1")
+        else:
+            _layers_tried.append("Layer 1 (failed)")
 
         # ── Layer 2a: deterministic selectors (only if caller gave any) ────
         # Tightly scoped: this branch only fires when the Planner / caller
@@ -197,12 +208,14 @@ class BrowserSkill:
         # exists to solve.
         selectors = node.metadata.get("selectors") or []
         if selectors:
+            _layers_tried.append("Layer 2a")
             det = await self._try_deterministic(url, goal, selectors)
             if det is not None:
                 return det if det.success else self._pack_error(
                     url, goal, "interaction_failed",
                     det.error or "deterministic path failed",
                     elapsed=time.time() - t0,
+                    layer_path=" → ".join(_layers_tried),
                 )
 
         # ── Layer 2b: a11y ──────────────────────────────────────────────────
@@ -210,6 +223,7 @@ class BrowserSkill:
             # Skip a11y entirely — caller wants Layer 3 explicitly.
             a11y_result = DriverResult(success=False, note="skipped by force_path=vision")
         else:
+            _layers_tried.append("Layer 2b")
             a11y_result = await self._drive(
                 A11yDriver, url, goal, client, artifacts_dir,
                 self.a11y_provider_pin, self.max_steps_a11y,
@@ -217,13 +231,16 @@ class BrowserSkill:
         if getattr(a11y_result, "gateway_blocked", False):
             return self._pack_error(url, goal, "gateway_blocked",
                                     a11y_result.note or "gateway_blocked after JS render",
-                                    elapsed=time.time() - t0)
+                                    elapsed=time.time() - t0,
+                                    layer_path=" → ".join(_layers_tried))
         if a11y_result.success:
             return self._pack_driver("a11y", url, goal, a11y_result,
                                      final_url=a11y_result.final_url,
-                                     elapsed=time.time() - t0)
+                                     elapsed=time.time() - t0,
+                                     layer_path=" → ".join(_layers_tried))
 
         # ── Layer 3: vision ─────────────────────────────────────────────────
+        _layers_tried.append("Layer 3")
         vis_result = await self._drive(
             SetOfMarksDriver, url, goal, client, artifacts_dir,
             self.vision_provider_pin, self.max_steps_vision,
@@ -231,17 +248,21 @@ class BrowserSkill:
         if getattr(vis_result, "gateway_blocked", False):
             return self._pack_error(url, goal, "gateway_blocked",
                                     vis_result.note or "gateway_blocked after JS render",
-                                    elapsed=time.time() - t0)
+                                    elapsed=time.time() - t0,
+                                    layer_path=" → ".join(_layers_tried))
         if vis_result.success:
             return self._pack_driver("vision", url, goal, vis_result,
                                      final_url=vis_result.final_url,
-                                     elapsed=time.time() - t0)
+                                     elapsed=time.time() - t0,
+                                     layer_path=" → ".join(_layers_tried))
 
         last_err = (vis_result.note or a11y_result.note
                     or layer1_http_error or "all layers exhausted")
+        best_steps = list(getattr(a11y_result, 'steps', []) or getattr(vis_result, 'steps', []))
         return self._pack_error(url, goal, "interaction_failed",
                                 f"all layers exhausted; last: {last_err}",
-                                elapsed=time.time() - t0)
+                                elapsed=time.time() - t0, steps=best_steps,
+                                layer_path=" → ".join(_layers_tried))
 
     # ── per-layer driver runs ──────────────────────────────────────────────
     async def _drive(self, DriverCls, url, goal, client, artifacts_dir,
@@ -254,7 +275,11 @@ class BrowserSkill:
             sub.mkdir(parents=True, exist_ok=True)
             artifacts_dir = str(sub)
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            browser = await p.chromium.launch(
+                headless=True,
+                # Removes the Automation-Controlled banner that many WAFs detect
+                args=["--disable-blink-features=AutomationControlled"],
+            )
             ctx = await browser.new_context(
                 viewport={"width": 1366, "height": 900},
                 user_agent=(
@@ -270,10 +295,24 @@ class BrowserSkill:
             )
             page = await ctx.new_page()
             try:
-                await page.goto(url, wait_until="domcontentloaded", timeout=45000)
-                # Last-chance gateway-block check on the rendered page (some
-                # walls only show up after JS executes).
+                # slow_load sites (Akamai/Cloudflare WAF): wait for networkidle so
+                # the JS challenge has time to complete before we inspect the DOM.
+                # Fallback on timeout — the page may still be usable.
+                if self.slow_load:
+                    try:
+                        await page.goto(url, wait_until="networkidle", timeout=60000)
+                    except Exception:
+                        pass  # proceed with whatever loaded
+                else:
+                    await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+                # Last-chance gateway-block check on the rendered page.
+                # Special case: Akamai WAF shows a countdown (~15s) then
+                # auto-redirects to the real page. Wait it out silently rather
+                # than failing immediately.
                 kind = detect_gateway_block(await page.content())
+                if kind == "akamai_waf":
+                    await asyncio.sleep(25)   # outlast the Akamai countdown
+                    kind = detect_gateway_block(await page.content())
                 if kind:
                     await browser.close()
                     out = DriverResult(
@@ -291,7 +330,32 @@ class BrowserSkill:
                 drv = DriverCls(page, client, cfg)
                 # Augment the result with final_url + extracted text so
                 # _pack_driver can fill BrowserOutput uniformly.
-                result = await drv.run()
+                try:
+                    result = await asyncio.wait_for(
+                        drv.run(), timeout=self.wall_clock_s
+                    )
+                except asyncio.TimeoutError:
+                    result = DriverResult(
+                        success=False,
+                        note=f"wall-clock cap {self.wall_clock_s:.0f}s exceeded",
+                        steps=list(drv.steps),
+                    )
+                    result.steps = list(drv.steps)
+                    result.final_url = page.url
+                    result.extracted = ""
+                    result.turns = len(drv.steps)
+                    result.actions = [
+                        {"turn": s.turn, "actions": s.actions, "outcome": s.outcome}
+                        for s in drv.steps
+                    ]
+                    return result
+                except Exception as exc:
+                    # Attach completed steps to the exception so agent_runner
+                    # can record partial turn/token data even on 503 failures.
+                    exc._partial_steps = list(getattr(drv, 'steps', []))
+                    raise
+                # Expose full Step objects so _pack_driver can aggregate tokens.
+                result.steps = drv.steps
                 result.final_url = page.url
                 result.extracted = ""
                 try:
@@ -312,9 +376,20 @@ class BrowserSkill:
         step is `{action, selector, value?}`. Returns AgentResult on success
         or None to let the cascade fall through to a11y."""
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            browser = await p.chromium.launch(
+                headless=True,
+                args=["--disable-blink-features=AutomationControlled"],
+            )
             ctx = await browser.new_context(
                 viewport={"width": 1366, "height": 900},
+                user_agent=(
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/131.0.0.0 Safari/537.36"
+                ),
+            )
+            await ctx.add_init_script(
+                "Object.defineProperty(navigator,'webdriver',{get:()=>undefined});"
             )
             page = await ctx.new_page()
             try:
@@ -349,18 +424,21 @@ class BrowserSkill:
 
     # ── packers ────────────────────────────────────────────────────────────
     def _pack(self, url, goal, path, *, turns, content=None, actions=None,
-              final_url=None, elapsed=0.0) -> AgentResult:
+              final_url=None, elapsed=0.0, layer_path="") -> AgentResult:
         out = BrowserOutput(
             url=url, goal=goal, path=path, turns=turns,
             content=content, actions=actions or [], final_url=final_url,
         )
+        d = out.model_dump()
+        if layer_path:
+            d["layer_path"] = layer_path
         return AgentResult(
             success=True, agent_name=self.NAME,
-            output=out.model_dump(), elapsed_s=elapsed,
+            output=d, elapsed_s=elapsed,
         )
 
     def _pack_driver(self, path, url, goal, drv_result,
-                     *, final_url, elapsed) -> AgentResult:
+                     *, final_url, elapsed, layer_path="") -> AgentResult:
         steps = getattr(drv_result, "steps", []) or []
         actions = [
             {
@@ -385,17 +463,28 @@ class BrowserSkill:
             actions=actions,
             final_url=final_url,
         )
+        d = out.model_dump()
+        if layer_path:
+            d["layer_path"] = layer_path
         return AgentResult(
             success=True, agent_name=self.NAME,
-            output=out.model_dump(), elapsed_s=elapsed,
+            output=d, elapsed_s=elapsed,
         )
 
-    def _pack_error(self, url, goal, code, msg, *, elapsed=0.0) -> AgentResult:
+    def _pack_error(self, url, goal, code, msg, *, elapsed=0.0, steps=None, layer_path="") -> AgentResult:
+        steps = steps or []
         out = BrowserOutput(
-            url=url or "", goal=goal, path="extract", turns=0, content=None,
+            url=url or "", goal=goal, path="extract",
+            turns=len(steps),
+            tok_in=sum(getattr(s, 'tokens_in', 0) for s in steps),
+            tok_out=sum(getattr(s, 'tokens_out', 0) for s in steps),
+            content=None,
         )
+        d = out.model_dump()
+        if layer_path:
+            d["layer_path"] = layer_path
         return AgentResult(
             success=False, agent_name=self.NAME,
-            output=out.model_dump(), error=msg, error_code=code,
+            output=d, error=msg, error_code=code,
             elapsed_s=elapsed,
         )

@@ -29,6 +29,7 @@ class SourceResult:
     tokens_in:     int
     tokens_out:    int
     elapsed_s:     float
+    layer_path:    str           = ""   # e.g. "Layer 1 (failed) → Layer 2b → Layer 3"
 
 
 @dataclass
@@ -54,7 +55,11 @@ class RunTrace:
             data = json.load(f)
         data["sources"] = [
             SourceResult(
-                **{**s, "turn_log": [TurnRecord(**t) for t in s["turn_log"]]}
+                **{
+                    **{k: v for k, v in s.items() if k != "turn_log"},
+                    "turn_log": [TurnRecord(**t) for t in s["turn_log"]],
+                    "layer_path": s.get("layer_path", ""),
+                }
             )
             for s in data["sources"]
         ]

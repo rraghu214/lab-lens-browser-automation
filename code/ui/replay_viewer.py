@@ -169,6 +169,10 @@ class ReplayViewer:
                 ui.badge(_STATUS_LABEL[sk], color=_STATUS_COLOR[sk]).classes("text-xs")
 
         with exp:
+            if source.layer_path:
+                ui.label(f"Path: {source.layer_path}").classes("text-xs px-2 pt-2").style(
+                    "color: var(--ll-text3); font-style: italic"
+                )
             if source.blocked:
                 ui.label("Blocked — gateway precondition fired").classes("text-sm p-2").style("color: #f87171")
             else:
