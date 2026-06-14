@@ -77,6 +77,17 @@ body, .q-page, .nicegui-content { background: var(--ll-bg) !important; }
 /* Log panel — follows the theme via CSS variables */
 .nicegui-log, .ll-log-wrap { background: var(--ll-log-bg) !important; }
 .nicegui-log, .nicegui-log * { color: var(--ll-log-text) !important; font-size: 11.5px !important; line-height: 1.65 !important; }
+/* Resize handles between panels */
+.ll-resize-h {
+  width: 4px;
+  background: var(--ll-border);
+  cursor: col-resize;
+  flex-shrink: 0;
+  transition: background 0.15s;
+  z-index: 10;
+  position: relative;
+}
+.ll-resize-h:hover, .ll-resize-h.ll-dragging { background: var(--ll-accent); }
 </style>
 <script>
 // :root defaults to light mode, so nothing to do for most users.
@@ -87,6 +98,37 @@ body, .q-page, .nicegui-content { background: var(--ll-bg) !important; }
       document.body.classList.add('ll-dark');
     });
   }
+})();
+
+// ── Panel resize handles ──────────────────────────────────────────────────
+(function(){
+  var drag = null, startX = 0, startW = 0, leftEl = null;
+  document.addEventListener('mousedown', function(e){
+    var h = e.target.closest('.ll-resize-h');
+    if (!h) return;
+    drag = h;
+    startX = e.clientX;
+    leftEl = h.previousElementSibling;
+    startW = leftEl ? leftEl.getBoundingClientRect().width : 0;
+    h.classList.add('ll-dragging');
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove', function(e){
+    if (!drag || !leftEl) return;
+    var w = Math.max(120, startW + (e.clientX - startX));
+    leftEl.style.width = w + 'px';
+    leftEl.style.minWidth = w + 'px';
+    leftEl.style.flex = 'none';
+  });
+  document.addEventListener('mouseup', function(){
+    if (!drag) return;
+    drag.classList.remove('ll-dragging');
+    drag = null; leftEl = null;
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  });
 })();
 </script>
 """
@@ -144,20 +186,24 @@ async def index():
     with ui.row().classes("w-full gap-0").style(
         "height: calc(100vh - 52px); overflow: hidden; align-items: stretch;"
     ):
-        with ui.column().classes("border-r overflow-y-auto").style(
-            "width: 260px; min-width: 260px; height: 100%; "
-            "background: var(--ll-surface); border-color: var(--ll-border);"
+        with ui.column().classes("overflow-y-auto").style(
+            "width: 260px; min-width: 120px; height: 100%; "
+            "background: var(--ll-surface);"
         ):
             query_panel = QueryPanel()
 
-        with ui.column().classes("border-r").style(
-            "width: 320px; min-width: 320px; height: 100%; overflow: hidden; "
-            "background: var(--ll-log-bg); border-color: var(--ll-border);"
+        ui.element("div").classes("ll-resize-h")
+
+        with ui.column().classes("").style(
+            "width: 320px; min-width: 120px; height: 100%; overflow: hidden; "
+            "background: var(--ll-log-bg);"
         ):
             log_panel = LogPanel()
 
+        ui.element("div").classes("ll-resize-h")
+
         with ui.column().classes("flex-1 overflow-y-auto").style(
-            "height: 100%; background: var(--ll-surface);"
+            "height: 100%; min-width: 200px; background: var(--ll-surface);"
         ):
             results_panel = ResultsPanel()
 
@@ -199,10 +245,15 @@ async def run_agent(goal, locality, opts, log_panel, results_panel, query_panel)
     artifacts_root = pathlib.Path(f"./run_artifacts/{trace.run_id}")
     artifacts_root.mkdir(parents=True, exist_ok=True)
 
+    def _log(line: str) -> None:
+        log_panel.push(line)
+        trace.log_lines.append(line)
+
     try:
         runner = AgentRunner(
-            log_push=log_panel.push,
+            log_push=_log,
             on_source_complete=results_panel.add_row,
+            on_tokens=log_panel.add_tokens,
             options=opts,
         )
         _current_run_task = asyncio.ensure_future(runner.run(trace, artifacts_root))
@@ -236,11 +287,16 @@ async def load_replay_from_disk(run_id: str, log_panel, results_panel) -> None:
     try:
         trace = RunTrace.load(str(path))
         log_panel.clear()
-        log_panel.push(f"▶ Loaded run {run_id}")
-        log_panel.push(f"  Goal: {trace.goal}")
-        if trace.locality:
-            log_panel.push(f"  Locality: {trace.locality}")
-        log_panel.push(f"  Sources: {len(trace.sources)}")
+        if trace.log_lines:
+            for line in trace.log_lines:
+                log_panel.push(line)
+        else:
+            # Legacy runs without saved log_lines — synthesise a short summary
+            log_panel.push(f"▶ Loaded run {run_id}")
+            log_panel.push(f"  Goal: {trace.goal}")
+            if trace.locality:
+                log_panel.push(f"  Locality: {trace.locality}")
+            log_panel.push(f"  Sources: {len(trace.sources)}")
         log_panel.set_status("COMPLETE")
         results_panel.clear()
         for row in (trace.comparison_rows or []):
@@ -254,6 +310,6 @@ async def load_replay_from_disk(run_id: str, log_panel, results_panel) -> None:
 
 
 try:
-    ui.run(title="LabLens", port=8000, reload=False)
+    ui.run(title="LabLens", port=8080, reload=False)
 except KeyboardInterrupt:
     pass

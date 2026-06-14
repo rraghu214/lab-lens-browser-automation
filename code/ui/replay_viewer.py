@@ -182,7 +182,7 @@ class ReplayViewer:
                 self._render_screenshots(source)
 
     def _render_screenshots(self, source: SourceResult) -> None:
-        screenshots = [t for t in source.turn_log if t.marked_path]
+        screenshots = [t for t in source.turn_log if t.marked_path or t.raw_png_path]
         if not screenshots:
             if source.layer == "layer1":
                 reason = "Layer 1 — static fetch, no browser interaction"
@@ -197,7 +197,9 @@ class ReplayViewer:
 
         with ui.row().classes("gap-2 flex-wrap mt-1"):
             for turn in screenshots:
-                url = turn.marked_path.replace("\\", "/").replace("./run_artifacts", "/artifacts")
+                _p = (turn.marked_path or turn.raw_png_path or "").replace("\\", "/")
+                _idx = _p.find("run_artifacts/")
+                url = ("/artifacts/" + _p[_idx + len("run_artifacts/"):]) if _idx >= 0 else "/artifacts/" + _p
                 with ui.card().tight().classes("cursor-pointer").on(
                     "click", lambda u=url: self._open_image_dialog(u)
                 ):

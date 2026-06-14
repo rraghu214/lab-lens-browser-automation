@@ -26,41 +26,63 @@ load_env(".env")
 # ── Source catalogue ──────────────────────────────────────────────────────────
 
 ONLINE_SOURCES = [
-    # disabled: city modal — a11y legend doesn't enumerate graphical city cards reliably
-    {"name": "Metropolis", "url": "https://www.metropolisindia.com", "layer_hint": "layer2b",
-     "disabled": True},
-    # ACTIVE: city selection works (turn 1-2 sets Bangalore), 503 on turn 3 was transient
+    # Layer 2b: popup X → city Bangalore → search → ₹600 product page
+    {"name": "Metropolis",
+     "url": "https://www.metropolisindia.com",
+     "layer_hint": "layer2b",
+     "wall_clock_s": 180.0,
+     "extra_hint": (
+         "IMPORTANT: A popup may appear — if it does, click the X/close button in the "
+         "top-right corner of the popup to dismiss it (Escape and clicking outside do NOT work). "
+         "Then click the city shown in the header (e.g. 'Mumbai') to open the city selector "
+         "and click 'Bangalore'. "
+         "Then click the search box, type 'Thyroid Profile', and click 'Thyroid Profile - 1' "
+         "from the dropdown. On the product page extract the price (e.g. ₹600) and call done."
+     )},
+    # Layer 2b cascade demo: two-field search bar (city LEFT, test RIGHT)
     {"name": "1mg", "url": "https://www.1mg.com/labs", "layer_hint": "layer2b",
-     "wall_clock_s": 90.0},
+     "wall_clock_s": 150.0,
+     "extra_hint": (
+         "A popup may appear on any screen — dismiss it by clicking the X/close button "
+         "OR clicking outside the popup (both work). "
+         "The search bar has TWO separate fields side by side: "
+         "the LEFT field is for city ('Search city'), the RIGHT field is for the test ('Search tests or full body checkups'). "
+         "Step 1: Click the LEFT 'Search city' field. A dropdown shows top cities (Delhi, Gurgaon, Pune, Bangalore). "
+         "If 'Bangalore' is already shown as the city, skip to Step 2. "
+         "Otherwise click 'Bangalore' from the list, OR type 'Bangalore' — if you type, "
+         "a sub-dropdown appears showing 'Bangalore' and 'Bangalore Rural'; click 'Bangalore' (not 'Bangalore Rural'). "
+         "Step 2: Click the RIGHT 'Search tests or full body checkups' field and type 'Thyroid Profile'. "
+         "A dropdown appears — click 'Thyroid Profile Total (T3, T4 & TSH)' (the first result). "
+         "Step 3: You land on the product page. Extract the price shown next to 'Test price:' (e.g. ₹629) and call done immediately."
+     )},
     # disabled: 4-step pincode flow too fragile
     {"name": "Thyrocare", "url": "https://www.thyrocare.com", "layer_hint": "layer2b",
      "slow_load": True, "disabled": True},
-    # ACTIVE: search results show tests (no price in list, needs click) — skip pincode flow
+    # disabled: slow_load networkidle + Layer3 fallback = 360s total; Practo covers the price
     {"name": "PharmEasy", "url": "https://pharmeasy.in/diagnostics", "layer_hint": "layer2b",
-     "slow_load": True, "wall_clock_s": 90.0},
+     "slow_load": True, "wall_clock_s": 120.0, "disabled": True},
     # ACTIVE: Akamai wait fix works; price ₹420 visible in search list → call done immediately
     {"name": "Practo", "url_template": "https://www.practo.com/tests?city={city}",
-     "layer_hint": "layer2b", "slow_load": True, "wall_clock_s": 180.0},
+     "layer_hint": "layer2b", "slow_load": True, "wall_clock_s": 360.0},
 ]
 
 NEARBY_SOURCES = [
     # custom_goal: let the LLM derive an appropriate Maps search query from the user's goal
     {
         "name": "Google Maps",
-        "url":  "https://www.google.com/maps",
+        "url":  "https://www.google.com/maps/search/thyroid+profile+lab+near+Koramangala+Bangalore",
         "layer_hint": "layer3",
         "force_path": "vision",
         "vision_provider": "ollama",
+        "wall_clock_s": 360.0,
         "custom_goal": (
-            "The user wants to find: '{goal}' near {locality}. "
-            "In the Google Maps search box, type a concise query — use only the test or panel name "
-            "and the locality (e.g. 'Thyroid Profile lab near Koramangala Bangalore'). "
-            "Press Enter to search. "
-            "Once the results appear, look at the LEFT PANEL showing the list of results — "
-            "DO NOT click into individual result cards. "
-            "From the visible results list, extract for the top 3-5 entries: "
+            "The user wants to find labs offering '{goal}' near {locality}. "
+            "The page has ALREADY loaded Google Maps search results for 'thyroid profile lab near Koramangala Bangalore'. "
+            "Look at the LEFT PANEL showing the list of labs/diagnostic centres. "
+            "DO NOT type anything or click into individual result cards. "
+            "From the visible results list on the LEFT, extract for the top 3-5 entries: "
             "lab name, star rating, number of reviews, address, and any visible price or hours. "
-            "Call done with all extracted entries — this is sufficient, no need to click each card."
+            "Call done IMMEDIATELY with all extracted entries."
         ),
     },
 ]
@@ -145,12 +167,24 @@ def _source_goal(source_name: str, goal: str, locality: str, layer_hint: str = "
     )
 
 
-def _build_turn_log(actions: list[dict]) -> list[TurnRecord]:
+def _build_turn_log(actions: list[dict], artifacts_dir: str | None = None) -> list[TurnRecord]:
     """Convert BrowserOutput.actions list into TurnRecord objects."""
+    from pathlib import Path
     records = []
     for step in (actions or []):
+        turn_n = int(step.get("turn", 0))
+        marked = None
+        raw = None
+        if artifacts_dir:
+            d = Path(artifacts_dir)
+            mp = d / f"turn_{turn_n:02d}_marked.png"
+            rp = d / f"turn_{turn_n:02d}_raw.png"
+            if mp.exists():
+                marked = "run_artifacts/" + "/".join(mp.parts[mp.parts.index("run_artifacts") + 1:]) if "run_artifacts" in mp.parts else str(mp).replace("\\", "/")
+            elif rp.exists():
+                raw = "run_artifacts/" + "/".join(rp.parts[rp.parts.index("run_artifacts") + 1:]) if "run_artifacts" in rp.parts else str(rp).replace("\\", "/")
         records.append(TurnRecord(
-            turn=int(step.get("turn", 0)),
+            turn=turn_n,
             elements=0,
             thinking=step.get("thinking", ""),
             actions=list(step.get("actions") or []),
@@ -159,6 +193,8 @@ def _build_turn_log(actions: list[dict]) -> list[TurnRecord]:
             tokens_in=int(step.get("tokens_in", 0)),
             tokens_out=int(step.get("tokens_out", 0)),
             latency_ms=int(step.get("latency_ms", 0)),
+            raw_png_path=raw,
+            marked_path=marked,
         ))
     return records
 
@@ -242,10 +278,12 @@ class AgentRunner:
         *,
         log_push: Callable[[str], None],
         on_source_complete: Optional[Callable[[dict], None]] = None,
+        on_tokens: Optional[Callable[[int], None]] = None,
         options: Optional[dict] = None,
     ):
         self.log_push = log_push
         self.on_source_complete = on_source_complete
+        self.on_tokens = on_tokens
         self.options = options or {}
         self._llm = LLMClient.from_env()
 
@@ -331,7 +369,7 @@ class AgentRunner:
                 skill = BrowserSkill(
                     artifacts_root=str(src_artifacts),
                     session=trace.run_id,
-                    a11y_provider_pin="ollama",   # local model, no rate limits; remote providers all 429
+                    a11y_provider_pin=None,       # gateway failover: cerebras(1.5s) → groq → nvidia → ollama
                     vision_provider_pin=src.get("vision_provider"),
                     max_steps_a11y=src.get("max_steps", 10),
                     wall_clock_s=src.get("wall_clock_s", 120.0),  # real cap enforced in skill
@@ -401,7 +439,7 @@ class AgentRunner:
                         "latency_ms": getattr(s, "latency_ms", 0),
                     }
                     for s in _partial
-                ])
+                ], artifacts_dir=str(src_artifacts))
                 trace.sources.append(SourceResult(
                     name=src_name, layer=err_layer, success=False, blocked=False,
                     turn_log=_p_tlog, extracted={}, tokens_in=_p_tok_in, tokens_out=_p_tok_out,
@@ -442,6 +480,8 @@ class AgentRunner:
             tok_out = int(out.get("tok_out") or 0)
             actions = list(out.get("actions") or [])
             content = out.get("content") or ""
+            if self.on_tokens and (tok_in + tok_out) > 0:
+                self.on_tokens(tok_in + tok_out)
 
             # Log outcome
             layer_path_str = out.get("layer_path", "")
@@ -466,7 +506,7 @@ class AgentRunner:
                 layer=layer,
                 success=result.success,
                 blocked=blocked,
-                turn_log=_build_turn_log(actions),
+                turn_log=_build_turn_log(actions, artifacts_dir=str(src_artifacts)),
                 extracted={"content": content[:8000]} if content else {},
                 tokens_in=tok_in,
                 tokens_out=tok_out,
@@ -518,8 +558,13 @@ class AgentRunner:
         trace.insights        = distilled.get("insights", "")
 
         # Push distilled rows to UI (overwrite placeholder rows)
+        # Enforce type="nearby" for sources in nearby_names — the Distiller LLM
+        # sometimes returns type="online" for Google Maps / nearby sources.
         if self.on_source_complete:
             for row in trace.comparison_rows:
+                row = dict(row)
+                # Always override type from code truth (distiller prompt often sets Practo as "nearby")
+                row["type"] = "nearby" if row.get("provider") in nearby_names else "online"
                 self.on_source_complete(row)
 
         rec = distilled.get("recommended", {})
@@ -568,6 +613,8 @@ class AgentRunner:
 
         try:
             result = await self._llm.chat(messages, max_tokens=4096)
+            if self.on_tokens:
+                self.on_tokens(result.get("tokens_in", 0) + result.get("tokens_out", 0))
             text = result.get("text", "")
             parsed = _parse_json(text)
             if not parsed:

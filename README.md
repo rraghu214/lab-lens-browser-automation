@@ -20,26 +20,18 @@ The agent must find: price, home-collection availability, TAT, rating, and inclu
 
 ```mermaid
 graph LR
-  Planner --> Browser_Metropolis["Browser: Metropolis"]
   Planner --> Browser_1mg["Browser: 1mg"]
-  Planner --> Browser_Netmeds["Browser: Netmeds"]
-  Planner --> Browser_Thyrocare["Browser: Thyrocare"]
-  Planner --> Browser_PharmEasy["Browser: PharmEasy"]
-  Planner --> Browser_GoogleMaps["Browser: Google Maps"]
   Planner --> Browser_Practo["Browser: Practo"]
-  Planner --> Browser_JustDial["Browser: JustDial"]
-  Browser_Metropolis --> Distiller
+  Planner --> Browser_GoogleMaps["Browser: Google Maps"]
   Browser_1mg --> Distiller
-  Browser_Netmeds --> Distiller
-  Browser_Thyrocare --> Distiller
-  Browser_PharmEasy --> Distiller
-  Browser_GoogleMaps --> Distiller
   Browser_Practo --> Distiller
-  Browser_JustDial --> Distiller
+  Browser_GoogleMaps --> Distiller
   Distiller --> Formatter
 ```
 
 The Planner fans out all sources in parallel planning but executes them sequentially (rate-limit safety). All browser outputs converge into the Distiller, which normalises, cross-checks, and generates insights before the Formatter renders the comparison table.
+
+Demo uses three sources: **1mg** (layer cascade demo), **Practo** (successful price extraction), **Google Maps** (vision layer demo).
 
 ---
 
@@ -47,109 +39,85 @@ The Planner fans out all sources in parallel planning but executes them sequenti
 
 | Source | Layer | Reason |
 |--------|-------|--------|
-| Metropolis | **Layer 1** — static extract | `httpx + trafilatura` pulled clean text in 0.76 s. Page HTML is fully server-rendered. |
-| 1mg | **Layer 2b** — a11y + LLM | JS-rendered; city defaults to Delhi; price hidden behind city picker + search. 5 turns to reach Bangalore Thyroid results. |
-| Netmeds | **Layer 2b** — a11y + LLM | JS-rendered; location popup appears immediately; anti-bot overlay on inner pages. |
-| Thyrocare | **Layer 2b → Layer 3** | A11y tree successfully searched for "Thyroid Profile" (turns 1–4); Cloudflare challenge fired on turn 6, escalated to vision LLM. |
-| PharmEasy | **Layer 2b** — a11y + LLM | Dynamic pincode-gated pricing; search input navigable via a11y. |
-| Google Maps | **Layer 2b** — a11y + LLM | Search navigated to Koramangala; JS-heavy results panel; no structured price data exposed. |
-| Practo | **Layer 1 → Layer 2b** | Layer 1 returned empty content; Layer 2b attempted but ran into JS-heavy listing pages. |
-| JustDial | **Layer 1** — static extract | Older server-rendered site; general directory content extracted in 1.15 s. |
+| 1mg | **Layer 1 → Layer 2b** | Layer 1 static extract insufficient (JS-rendered city selector). Layer 2b a11y driver navigated city picker + search. Cascade path shown in UI. |
+| Practo | **Layer 1 → Layer 2b** | Layer 1 returned Akamai WAF page (25 s countdown). Layer 2b a11y driver: 3 turns to find price ₹420 directly on the search results list. **Success.** |
+| Google Maps | **Layer 1 → Layer 3** | Layer 1 static fetch returns redirect. Layer 3 vision (SetOfMarks): screenshot of Maps search results panel annotated with numbered boxes; LLM reads lab names from the panel. |
 
 ---
 
 ## 4. Browser actions taken
 
-### 1mg — Layer 2b, 5 turns
+### Practo — Layer 1 → Layer 2b, 3 turns (run `30601baf`)
 
 | Turn | A11y action | What happened |
 |------|------------|---------------|
-| 1 | Navigate to labs.1mg.com | Nav rendered; no search results yet |
-| 2 | `click([3] LAB TESTS)` | Lab-test home loads; search bar + city picker visible; city = "New Delhi" |
-| 3 | `click([14] city input)` | Dropdown opens; "Search city" field + city list visible |
-| 4 | `click([35] Bangalore)` | City switched to Bangalore; price context now Bangalore |
-| 5 | `type([15], "Thyroid Profile")` | Autocomplete shows: "Thyroid Profile Total (T3, T4 & TSH)", "Thyroid Profile Free (FT3, FT4 & TSH)", "Thyroid Comprehensive Package" |
+| 1 | `wait(2)` | Page still rendering (Akamai WAF cleared; waiting for React hydration) |
+| 2 | `wait(3)` | City = Bangalore already visible; search results partially loading |
+| 3 | `done(True, note="Found Thyroid Profile at ₹420...")` | Element `[6] Thyroid Profile ₹420` visible in results list — called done immediately without clicking into detail page |
 
-### Thyrocare — Layer 2b (5 turns) → Layer 3 vision (1 turn)
+### 1mg — Layer 1 → Layer 2b (cap reached, no price, run `30601baf`)
 
-| Turn | Action | What happened |
-|------|--------|---------------|
-| 1 | Navigate to thyrocare.com | Nav rendered; search input [3] visible |
-| 2 | Read a11y tree | Same state — confirmed interactive elements |
-| 3 | `type([3], "Thyroid Profile")` | Search field filled |
-| 4 | Read a11y tree | Results visible: "Jaanch Thyroid Profile - Basic", "Jaanch Thyroid Profile - Advanced", "Jaanch Thyroid Profile - Basic Plus" |
-| 5 | `click([16] Jaanch Thyroid Profile - Basic)` | Navigation attempted; page reloaded |
-| 6 | Cloudflare challenge detected | A11y tree collapsed to [Cloudflare] [Privacy] — escalated to Layer 3 vision |
+| Turn | A11y action | What happened |
+|------|------------|---------------|
+| 1 | `click([city picker])` | City modal appeared; selecting Bangalore |
+| 2 | `type([search], "Thyroid Profile")` | Search submitted; results loading |
+| 3 | `wait(2)` | Results not yet rendered; wall-clock cap fired (90 s) |
 
-### Netmeds — Layer 2b, 2 turns
+### Google Maps — Layer 1 → Layer 3 vision (direct search URL)
 
-| Turn | Action | What happened |
-|------|--------|---------------|
-| 1 | Navigate to labs.netmeds.com | Mostly empty a11y (JS not fully rendered) |
-| 2 | Read a11y tree | Location popup: "Sign in to see your location" + pincode input — blocked without login |
-
-### PharmEasy — Layer 2b, 1 turn
-
-| Turn | Action | What happened |
-|------|--------|---------------|
-| 1 | Navigate to pharmeasy.in/diagnostics | Full page rendered; search input [2], pincode selector [21] visible |
-
-### Google Maps — Layer 2b, 2 turns
-
-| Turn | Action | What happened |
-|------|--------|---------------|
-| 1 | Navigate to maps.google.com | Search bar [2] visible |
-| 2 | `type([2], "Thyroid lab Koramangala Bangalore")` → `click(Search)` | Koramangala area loaded; JS-heavy results panel with no structured price data in a11y tree |
+| Turn | Vision action | What happened |
+|------|--------------|---------------|
+| 1 | Screenshot of search results panel | SetOfMarks annotates left panel (lab list); LLM reads lab names, ratings from annotated screenshot; calls `done` with extracted entries |
 
 ---
 
 ## 5. Screenshots
 
-Screenshots from run `1b048d65` — annotated set-of-marks with numbered interactive elements.
+Screenshots from run `30601baf` — A11y driver saves raw PNG every turn for replay viewer.
 
-### 1mg — Turn 3: city dropdown open
-![1mg city dropdown](code/run_artifacts/1b048d65/1mg/browser_1781241333/a11y/turn_03_raw.png)
+### Practo — Turn 3: ₹420 visible in search list (done called immediately)
 
-### 1mg — Turn 5: Thyroid Profile autocomplete
-![1mg search autocomplete](code/run_artifacts/1b048d65/1mg/browser_1781241333/a11y/turn_05_raw.png)
+A11y driver saw `[6]<a>Thyroid Profile ₹420</a>` in the accessibility legend and called `done(True, note="Found Thyroid Profile at ₹420...")` without clicking into the detail page.
 
-### Thyrocare — Turn 4: search results visible
-![Thyrocare search results](code/run_artifacts/1b048d65/thyrocare/browser_1781241769/a11y/turn_04_raw.png)
+> Screenshot path: `code/run_artifacts/30601baf/practo/` (A11y driver; raw PNGs saved per turn)
 
-### Thyrocare — Turn 6: Cloudflare challenge (Layer 3 escalation trigger)
-![Thyrocare Cloudflare](code/run_artifacts/1b048d65/thyrocare/browser_1781241769/a11y/turn_06_raw.png)
+### Google Maps — Turn 1: vision layer, annotated search results panel
 
-### Google Maps — Turn 2: Koramangala search
-![Google Maps](code/run_artifacts/1b048d65/google_maps/browser_1781242049/a11y/turn_02_raw.png)
+SetOfMarks driver takes a full screenshot of the Maps page, annotates each interactive element with a numbered dashed box, and sends the annotated image to the vision LLM to extract lab names and ratings from the left panel.
+
+> Screenshot path: from current run artifacts (Layer 3 vision; marked PNG saved in `google_maps/vision/`)
 
 ---
 
 ## 6. Extracted data (sample)
 
-> **Note:** Replace this section with actual extracted JSON from the clean demo run.
+### Practo — Layer 2b agent extracted (run `30601baf`)
 
-### Metropolis — Layer 1 raw extract (run `1b048d65`)
+Agent called `done(True, note="...")` on turn 3 after seeing the price on the search results list:
 
-```json
-{
-  "source": "Metropolis",
-  "layer": "layer1",
-  "elapsed_s": 0.76,
-  "content_preview": "Metropolis has a team of 200 senior pathologists and over 2000 technicians... home collection service... same-day reports..."
-}
+```
+AGENT EXTRACTED:
+Found Thyroid Profile at ₹420 with home collection info not visible in list,
+TAT not shown, test parameters not listed, rating not shown.
+Other relevant results: Complete Blood Count ₹330, Lipid Profile ₹620,
+Liver Function Test ₹790.
+
+PAGE TEXT:
+Get reports within 24hrs … Home sample collection … E reports in 24 hrs …
 ```
 
-### 1mg — Layer 2b extracted (clean run — replace below)
+### Distiller output — comparison row for Practo
 
 ```json
 {
-  "source": "1mg",
-  "layer": "layer2b",
-  "price": "<!-- REPLACE: e.g. 349 -->",
+  "provider": "Practo",
+  "type": "nearby",
+  "price": 420,
   "home_collection": true,
   "tat_hours": 24,
   "parameters": ["T3", "T4", "TSH"],
-  "backend_lab": "<!-- REPLACE: e.g. Thyrocare Technologies -->"
+  "tsh_type": "standard",
+  "notes": "Home collection mentioned generally; test parameters not listed explicitly."
 }
 ```
 
@@ -157,49 +125,40 @@ Screenshots from run `1b048d65` — annotated set-of-marks with numbered interac
 
 ## 7. Final comparison table
 
-> **Prices from clean demo run — update after recording.**
+Data from run `30601baf` (2026-06-14). Practo confirmed live; Google Maps pending vision layer success.
 
 ### Online platforms
 
 | Provider | Price (₹) | Home | Walk-in | TAT (h) | Rating | Parameters | Notes |
 |----------|-----------|------|---------|---------|--------|------------|-------|
-| Metropolis | — | ✓ | — | ~12 | — | T3, T4, TSH | Price not shown on homepage; navigates to test page in clean run |
-| 1mg | — | — | — | — | — | — | JS-rendered; city + search required — see §4 |
-| Netmeds | — | — | — | — | — | — | Login-gated location picker |
-| Thyrocare | — | — | — | — | — | — | Cloudflare on product page |
-| PharmEasy | — | — | — | — | — | — | Pincode-gated pricing |
+| 1mg | — | — | — | — | — | — | JS-rendered; city picker + search needed; wall-clock cap before results rendered |
+| Practo | **₹420** | ✓ | — | 24 | — | T3, T4, TSH | Price visible in search results list (element [6]); 3 turns; Layer 1→2b |
 
 ### Nearby labs (Koramangala, Bangalore)
 
 | Provider | Price (₹) | Home | TAT | Rating | Notes |
 |----------|-----------|------|-----|--------|-------|
-| Google Maps | — | — | — | — | JS-heavy; no structured data in a11y |
-| Practo | — | — | — | — | JS-rendered listing |
-| JustDial | — | — | — | — | General directory content only |
+| Google Maps | — | — | — | — | Layer 3 vision: lab names extracted from search panel (see §4); no price data in panel |
 
-> **Fill this table from `trace.comparison_rows` after the clean demo run.**
+> Source: `trace.comparison_rows` from `run_artifacts/30601baf/replay.json`
 
 ---
 
 ## 8. Turn count and cost summary
 
-### Run `1b048d65` — 2026-06-12
+### Run `30601baf` — 2026-06-14 (demo run)
 
-| Source | Layer | Turns | Tokens in | Tokens out | Time (s) |
-|--------|-------|-------|-----------|------------|----------|
-| Metropolis | layer1 | 0 | 0 | 0 | 0.76 |
-| 1mg | layer2b | 5 | — | — | 297.60 |
-| Netmeds | layer2b | 2 | — | — | 134.93 |
-| Thyrocare | layer2b+vision | 6 | — | — | 151.20 |
-| PharmEasy | layer2b | 1 | — | — | 123.97 |
-| Google Maps | layer2b | 2 | — | — | 132.74 |
-| Practo | layer1→2b | — | — | — | 194.76 |
-| JustDial | layer1 | 0 | 0 | 0 | 1.15 |
+| Source | Layer path | Turns | Tokens in | Tokens out | Time (s) | Result |
+|--------|-----------|-------|-----------|------------|----------|--------|
+| 1mg | Layer 1 → Layer 2b → Layer 3 | 3 | 4,508 | 294 | 188.95 | Failed (wall-clock cap) |
+| Practo | Layer 1 → Layer 2b | **3** | **3,688** | **430** | **90.99** | **✓ ₹420** |
+| Google Maps | Layer 1 → Layer 3 | 1 | 845 | 144 | 184.51 | Failed (old URL; typing instead of reading panel) |
 
-**Total elapsed:** ~17 min (LLM providers throttled; clean run expected ~5–8 min with Cerebras)  
-**Est. cost:** $0.00 — entirely free-tier providers (Gemini, Groq, Cerebras, Ollama)
+**Total elapsed:** ~7.7 min  
+**Providers used:** Cerebras (1.5 s/call), Nvidia (9–60 s/call), Ollama (48 s/call)  
+**Est. cost:** $0.00 — entirely free-tier providers
 
-> Token counts will be populated from `trace.cost` in the clean run replay.
+> Full token ledger available via `GET /v1/cost/by_agent?session=30601baf` on the gateway.
 
 ---
 

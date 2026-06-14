@@ -240,6 +240,14 @@ class BrowserSkill:
                                      layer_path=" → ".join(_layers_tried))
 
         # ── Layer 3: vision ─────────────────────────────────────────────────
+        # Skip Layer 3 if a11y was wall-clock capped: ollama vision would
+        # cost another full wall_clock_s for text-only sites (no benefit).
+        if "wall-clock cap" in (a11y_result.note or ""):
+            return self._pack_error(url, goal, "interaction_failed",
+                                    f"a11y wall-clock cap hit; skipping vision to avoid cascade doubling",
+                                    elapsed=time.time() - t0,
+                                    steps=list(getattr(a11y_result, 'steps', [])),
+                                    layer_path=" → ".join(_layers_tried))
         _layers_tried.append("Layer 3")
         vis_result = await self._drive(
             SetOfMarksDriver, url, goal, client, artifacts_dir,
@@ -334,26 +342,33 @@ class BrowserSkill:
                     result = await asyncio.wait_for(
                         drv.run(), timeout=self.wall_clock_s
                     )
-                except asyncio.TimeoutError:
+                except (asyncio.TimeoutError, Exception) as exc:
+                    # asyncio.TimeoutError = wall-clock cap fired.
+                    # Playwright TimeoutError = screenshot/page op timed out
+                    # (can surface during CancelledError cleanup).
+                    # Both are treated as a cap — do NOT re-raise.
+                    exc_name = type(exc).__name__
+                    is_cap = isinstance(exc, asyncio.TimeoutError) or (
+                        "TimeoutError" in exc_name and "playwright" in
+                        type(exc).__module__.lower()
+                    )
+                    if not is_cap:
+                        exc._partial_steps = list(getattr(drv, 'steps', []))
+                        raise
                     result = DriverResult(
                         success=False,
                         note=f"wall-clock cap {self.wall_clock_s:.0f}s exceeded",
-                        steps=list(drv.steps),
+                        steps=list(getattr(drv, 'steps', [])),
                     )
-                    result.steps = list(drv.steps)
+                    result.steps = list(getattr(drv, 'steps', []))
                     result.final_url = page.url
                     result.extracted = ""
-                    result.turns = len(drv.steps)
+                    result.turns = len(result.steps)
                     result.actions = [
                         {"turn": s.turn, "actions": s.actions, "outcome": s.outcome}
-                        for s in drv.steps
+                        for s in result.steps
                     ]
                     return result
-                except Exception as exc:
-                    # Attach completed steps to the exception so agent_runner
-                    # can record partial turn/token data even on 503 failures.
-                    exc._partial_steps = list(getattr(drv, 'steps', []))
-                    raise
                 # Expose full Step objects so _pack_driver can aggregate tokens.
                 result.steps = drv.steps
                 result.final_url = page.url
@@ -454,12 +469,20 @@ class BrowserSkill:
             }
             for s in steps
         ]
+        # When the driver's `done(note=...)` carries structured extraction,
+        # prepend it so the Distiller sees it even if trafilatura didn't find it.
+        done_note = getattr(drv_result, "note", "") or ""
+        page_extract = getattr(drv_result, "extracted", None) or ""
+        if drv_result.success and done_note:
+            combined = f"AGENT EXTRACTED:\n{done_note}\n\nPAGE TEXT:\n{page_extract}"
+        else:
+            combined = page_extract or None
         out = BrowserOutput(
             url=url, goal=goal, path=path,
             turns=len(steps),
             tok_in=sum(getattr(s, "tokens_in", 0) for s in steps),
             tok_out=sum(getattr(s, "tokens_out", 0) for s in steps),
-            content=getattr(drv_result, "extracted", None) or None,
+            content=combined,
             actions=actions,
             final_url=final_url,
         )

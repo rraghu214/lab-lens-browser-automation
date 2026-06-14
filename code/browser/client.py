@@ -39,7 +39,7 @@ class V9Client:
         self,
         base_url: str = "http://localhost:8109",
         agent: str = "s9_browser",
-        timeout: float = 120.0,
+        timeout: float = 300.0,
         session: Optional[str] = None,
     ):
         self.base_url = base_url.rstrip("/")
