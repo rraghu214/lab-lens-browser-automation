@@ -1,0 +1,30 @@
+[1]<a></a>
+[2]<input>Bangalore</input>
+[3]<input>Search for tests, packages & profiles</input>
+[4]<a></a>
+[5]<a></a>
+[6]<a>Thyroid Profile ₹420 Known as Thyroid Profile Total Blood</a>
+[7]<a>Complete Blood Count ₹330 Known as Complete Blood Count Automated Blood</a>
+[8]<a>Lipid Profile ₹620 Known as Lipid Profile Blood</a>
+[9]<a>Liver Function Test ₹790 Known as Liver Function Tests Blood</a>
+[10]<a>Dengue NS 1 ₹630 Known as Dengue Ns1 Antigen Pcr Blood</a>
+[11]<a>Malarial Antigen ₹680 Known as Malarial Antigen Pcr Blood</a>
+[12]<a>HbA1c ₹420 Known as Glycosylated Haemoglobin Blood</a>
+[13]<a>25% OFF Includes 5 tests Vitamin Deficiency Health Checkup For Age:11-80yrs</a>
+[14]<a>24% OFF Includes 96 tests Young Indian Health Checkup - Advanced For Age:30-50yr</a>
+[15]<a>22% OFF Includes 106 tests Comprehensive Full Body Check For Age:18-100yrs</a>
+[16]<a>20% OFF Includes 112 tests Annual Health Check - Platinum For Age:18-100yrs</a>
+[17]<div>Help</div>
+[18]<img>image</img>
+[19]<span>Cart</span>
+[20]<div></div>
+[21]<div>ADD TO CART</div>
+[22]<div>ADD TO CART</div>
+[23]<div>ADD TO CART</div>
+[24]<div>ADD TO CART</div>
+[25]<div>ADD TO CART</div>
+[26]<div>ADD TO CART</div>
+[27]<div>ADD TO CART</div>
+[28]<span>Featured Checkups</span>
+[29]<span>Women's Health</span>
+[30]<span>Men's Health</span>

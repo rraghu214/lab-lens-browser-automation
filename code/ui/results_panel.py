@@ -24,6 +24,7 @@ NEARBY_COLS = [
 
 class ResultsPanel:
     def __init__(self):
+        self._nearby_seq = 0   # unique key counter for nearby rows
         with ui.column().classes("w-full h-full gap-0"):
 
             # Tabs
@@ -102,7 +103,7 @@ class ResultsPanel:
                     "font-size: 10px; font-weight: 700; letter-spacing: 0.1em; color: var(--ll-text3);"
                 )
                 self._nearby_table = ui.table(
-                    columns=NEARBY_COLS, rows=[], row_key="provider"
+                    columns=NEARBY_COLS, rows=[], row_key="_id"
                 ).classes("w-full").style(
                     "border: 1px solid var(--ll-border); border-radius: 8px; overflow: hidden;"
                 ).props("dense flat")
@@ -113,13 +114,20 @@ class ResultsPanel:
         row = dict(row)
         if isinstance(row.get("parameters"), list):
             row["parameters"] = ", ".join(str(p) for p in row["parameters"]) or "—"
-        target = self._nearby_table if row.get("type") == "nearby" else self._online_table
+        is_nearby = row.get("type") == "nearby"
+        target = self._nearby_table if is_nearby else self._online_table
         provider = row.get("provider", "")
-        for i, existing in enumerate(target.rows):
-            if existing.get("provider") == provider:
-                target.rows[i] = row   # distiller overwrites placeholder
-                target.update()
-                return
+        if not is_nearby:
+            # Online: dedup by provider so distiller row overwrites the live placeholder
+            for i, existing in enumerate(target.rows):
+                if existing.get("provider") == provider:
+                    target.rows[i] = row
+                    target.update()
+                    return
+        else:
+            # Nearby: each lab is a distinct row even if the name repeats (two branches)
+            row["_id"] = self._nearby_seq
+            self._nearby_seq += 1
         target.rows.append(row)
         target.update()
 
@@ -143,5 +151,6 @@ class ResultsPanel:
         self._online_table.update()
         self._nearby_table.rows.clear()
         self._nearby_table.update()
+        self._nearby_seq = 0
         self._insight_md.set_content("*Run a search to see insights.*")
         self._rec_card.classes(add="hidden")

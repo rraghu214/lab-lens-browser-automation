@@ -1,0 +1,116 @@
+[1]<button>Get a call back now!</button>
+[2]<a>080-4891-1400</a>
+[3]<button>Close</button>
+[4]<input>name</input>
+[5]<label>Your Name</label>
+[6]<input>Please enter exactly 10 digits</input>
+[7]<label>Mobile Number</label>
+[8]<select>Select City Mumbai Pune Chennai Bangalore Delhi -------------- Adyar Allapuzha A</select>
+[9]<input>yes</input>
+[10]<a>terms-condition</a>
+[11]<a>privacy-policy</a>
+[12]<button>submit</button>
+[13]<a role="button">about</a>
+[14]<a role="button">doctors</a>
+[15]<a role="button">partners</a>
+[16]<a role="button">corporate</a>
+[17]<a role="button">careers</a>
+[18]<a role="button">truhealth-blog</a>
+[19]<a role="button">find-centers</a>
+[20]<a>logo</a>
+[21]<button>Search City</button>
+[22]<input>Search for Tests, Health Checkups</input>
+[23]<a>Contact</a>
+[24]<a>Contact</a>
+[25]<button>Country Dropdown</button>
+[26]<a>Play-Store</a>
+[27]<a>App-Store</a>
+[28]<a>Health-Risk</a>
+[29]<a>Health-Risk</a>
+[30]<a>Health-Risk</a>
+[31]<a>Health-Risk</a>
+[32]<a>Health-Risk</a>
+[33]<a>View-All</a>
+[34]<a>Health-Conditions</a>
+[35]<a>Health-Conditions</a>
+[36]<a>Health-Conditions</a>
+[37]<a>Health-Conditions</a>
+[38]<a>Health-Conditions</a>
+[39]<a>Health-Conditions</a>
+[40]<a>Health-Conditions</a>
+[41]<a>Health-Conditions</a>
+[42]<a>Health-Conditions</a>
+[43]<a>Health-Conditions</a>
+[44]<a>Health-Conditions</a>
+[45]<a>Health-Conditions</a>
+[46]<a>Health-Conditions</a>
+[47]<a>Health-Conditions</a>
+[48]<a>Health-Conditions</a>
+[49]<a>Food-Intolerance-Test</a>
+[50]<a>CBC-Test</a>
+[51]<a>Lipid-Profile-Test</a>
+[52]<a>Allergy-Panel-Test</a>
+[53]<a>Vitamin-D-Blood-Test</a>
+[54]<a>Thyroid-Test</a>
+[55]<a>HbA1C-Test-or-Glycated-Haemoglobin-Test</a>
+[56]<a>Thrombophilia-Profile-Test</a>
+[57]<a>Package-Name</a>
+[58]<a>Package-Name</a>
+[59]<a>Package-Name</a>
+[60]<a>Package-Name</a>
+[61]<a>Package-Name</a>
+[62]<a>Package-Name</a>
+[63]<a>Package-Name</a>
+[64]<a>Package-Name</a>
+[65]<a>Package-Name</a>
+[66]<a>Package-Name</a>
+[67]<a>Package-Name</a>
+[68]<a>Package-Name</a>
+[69]<a>Package-Name</a>
+[70]<a>Package-Name</a>
+[71]<a>Health-Package</a>
+[72]<a>Know-Our-Experts</a>
+[73]<a>centre-of-genomics/Nephrology</a>
+[74]<a>centre-of-genomics/oncology</a>
+[75]<a>centre-of-genomics/women</a>
+[76]<a>centre-of-genomics/gastroenterology</a>
+[77]<a>centre-of-genomics/neurology</a>
+[78]<a>centre-of-genomics-endocrinology</a>
+[79]<a>centre-of-genomics</a>
+[80]<a>Home-Visit</a>
+[81]<a>Upload</a>
+[82]<a>Sample-Tracking</a>
+[83]<a>Download-Report</a>
+[84]<a>Login</a>
+[85]<button>Shopping-Cart</button>
+[86]<a>Home</a>
+[87]<a>Thyroid Profile Test</a>
+[88]<a>Test Details</a>
+[89]<a>Test Overview</a>
+[90]<a>FAQ's</a>
+[91]<a>Reviews</a>
+[92]<a></a>
+[93]<button>Add to cart</button>
+[94]<button>Get Instant Call Back</button>
+[95]<a>SARS- CoV-2 (COVID 19) RNA Detection by RT-PCR, VTM Swab</a>
+[96]<button></button>
+[97]<a>NextGen : NIPT (Non-Invasive Prenatal Testing)</a>
+[98]<button></button>
+[99]<a>Food Intolerance (Food IgG) Test, Serum</a>
+[100]<button></button>
+[101]<a>CBC Haemogram, EDTA Blood</a>
+[102]<button></button>
+[103]<button></button>
+[104]<i></i>
+[105]<h4>Health Risks</h4>
+[106]<i></i>
+[107]<h4>Health Conditions</h4>
+[108]<i></i>
+[109]<h4>Blood Tests</h4>
+[110]<i></i>
+[111]<h4>Truhealth Packages</h4>
+[112]<i></i>
+[113]<h4>Specialty</h4>
+[114]<i></i>
+[115]<h4>Genomics</h4>
+[116]<img></img>

@@ -1,0 +1,47 @@
+[1]<input>Bangalore</input>
+[2]<input>Search tests or full body checkups</input>
+[3]<button>BOOK</button>
+[4]<input>Phone number</input>
+[5]<button>Get a free call back</button>
+[6]<button>Close</button>
+[7]<img>Location</img>
+[8]<img>Location current</img>
+[9]<span>Test details</span>
+[10]<span>Understanding the test</span>
+[11]<span>Test measures</span>
+[12]<span>FAQ's</span>
+[13]<span>City-wise pricing</span>
+[14]<span>Home collection</span>
+[15]<span>References</span>
+[16]<img></img>
+[17]<u>men & women</u>
+[18]<div>Contains</div>
+[19]<img></img>
+[20]<div>3 tests</div>
+[21]<img></img>
+[22]<p>The Thyroid Profile Total (T3, T4 & TSH) is a group of blood tests that measure </p>
+[23]<div>see more</div>
+[24]<img></img>
+[25]<img></img>
+[26]<font>Samples required</font>
+[27]<font>Blood</font>
+[28]<img></img>
+[29]<img></img>
+[30]<b>Find out</b>
+[31]<font>Why is this test booked?</font>
+[32]<img></img>
+[33]<img></img>
+[34]<font>Preparations</font>
+[35]<div>No special preparation is required.</div>
+[36]<img></img>
+[37]<div>Sample Collection</div>
+[38]<div>Who will collect your samples?</div>
+[39]<img></img>
+[40]<img></img>
+[41]<img>know_more_icon</img>
+[42]<div>Tata 1mg Labs</div>
+[43]<img>chevron</img>
+[44]<img>most trusted lab</img>
+[45]<span>Who will collect your samples?</span>
+[46]<span>Tata 1mg certified phlebotomists</span>
+[47]<img>View phlebo details</img>

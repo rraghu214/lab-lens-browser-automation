@@ -1,0 +1,80 @@
+[1]<button>Menu</button>
+[2]<button> Saved</button>
+[3]<button> Recents</button>
+[4]<button> Get app</button>
+[5]<button>Learn more about legal disclosure regarding public reviews on Google Maps</button>
+[6]<button>Share</button>
+[7]<a>Orange Health Labs | Full Body Checkup & Diagnostic Centre in Koramangala</a>
+[8]<a>Visit Orange Health Labs | Full Body Checkup & Diagnostic Centre in Koramangala'</a>
+[9]<button>Get directions to Orange Health Labs | Full Body Checkup & Diagnostic Centre in </button>
+[10]<a>Orange Health Labs | Health Checkups & Blood Tests at Home in Bangalore</a>
+[11]<a>Visit Orange Health Labs | Health Checkups & Blood Tests at Home in Bangalore's </a>
+[12]<button>Get directions to Orange Health Labs | Health Checkups & Blood Tests at Home in </button>
+[13]<a>Mediclive Diagnostics | Blood Test, ECG, Liver Test, Thyroid Profile, Health Che</a>
+[14]<a>Visit Mediclive Diagnostics | Blood Test, ECG, Liver Test, Thyroid Profile, Heal</a>
+[15]<button>Get directions to Mediclive Diagnostics | Blood Test, ECG, Liver Test, Thyroid P</button>
+[16]<a>Neuberg Anand Reference Laboratory - Kormangala offers Diagnostics, Lab Tests, B</a>
+[17]<a>Visit Neuberg Anand Reference Laboratory - Kormangala offers Diagnostics, Lab Te</a>
+[18]<button>Get directions to Neuberg Anand Reference Laboratory - Kormangala offers Diagnos</button>
+[19]<a>Thyrocare Diagnostic Lab | Blood Test Centre - Bangalore, Karnataka</a>
+[20]<button role="checkbox"> Update results when map moves</button>
+[21]<button>Collapse side panel</button>
+[22]<div></div>
+[23]<div></div>
+[24]<div>Orange Health Labs | Full Body Checkup & Diagnostic Centre in Koramangala</div>
+[25]<span>4.9</span>
+[26]<div></div>
+[27]<div></div>
+[28]<div></div>
+[29]<div></div>
+[30]<div></div>
+[31]<span>Medical laboratory</span>
+[32]<span>1st block, 259, 1st Main Rd</span>
+[33]<span>Open</span>
+[34]<span>· Closes 1:30 pm · Reopens 2 pm</span>
+[35]<span>063669 67134</span>
+[36]<div></div>
+[37]<div></div>
+[38]<div>Orange Health Labs | Health Checkups & Blood Tests at Home in Bangalore</div>
+[39]<span>4.9</span>
+[40]<div></div>
+[41]<div></div>
+[42]<div></div>
+[43]<div></div>
+[44]<div></div>
+[45]<span>Diagnostic center</span>
+[46]<span>2nd Floor, 912, 80 Feet Rd</span>
+[47]<span>Open</span>
+[48]<span>· Closes 9 pm</span>
+[49]<span>090081 11144</span>
+[50]<div></div>
+[51]<div></div>
+[52]<div>Mediclive Diagnostics | Blood Test, ECG, Liver Test, Thyroid Profile, Health Che</div>
+[53]<span>4.8</span>
+[54]<div></div>
+[55]<div></div>
+[56]<div></div>
+[57]<div></div>
+[58]<div></div>
+[59]<span>Medical laboratory</span>
+[60]<span>#564, 16th Main Road, 13th Cross Rd, near Oxford College</span>
+[61]<span>Open</span>
+[62]<span>· Closes 2 pm</span>
+[63]<span>063632 22984</span>
+[64]<div></div>
+[65]<div></div>
+[66]<div>Neuberg Anand Reference Laboratory - Kormangala offers Diagnostics, Lab Tests, B</div>
+[67]<span>4.8</span>
+[68]<div></div>
+[69]<div></div>
+[70]<div></div>
+[71]<div></div>
+[72]<div></div>
+[73]<span>Medical laboratory</span>
+[74]<span></span>
+[75]<span>Ground floor, 675 /A, opp. BDA complex</span>
+[76]<span>Open</span>
+[77]<span>· Closes 2 pm</span>
+[78]<span>094498 62624</span>
+[79]<div></div>
+[80]<div></div>

@@ -122,7 +122,8 @@ Rules:
 - If a source was blocked: set `"blocked": true` and `"price": null`. Fill other fields with null/false/0/"".
 - If content was retrieved but no price found: set `"price": null` and explain in `"notes"`.
 - `parameters` should list which markers are included (e.g. `["T3", "T4", "TSH"]`).
-- `type` is `"online"` for the five online platforms, `"nearby"` for Practo/JustDial/Google Maps.
+- `type` is `"online"` for all online booking platforms (1mg, Metropolis, Practo, Thyrocare, PharmEasy). `type` is `"nearby"` only for map/directory sources that list physical labs near a location (Google Maps, JustDial).
+- **Nearby sources (Google Maps, JustDial)**: create ONE row per individual lab/diagnostic centre found in the results — NOT one row per source. Set `provider` to the lab's actual name (e.g. `"Orange Health Labs"`, `"Thyrocare Diagnostic Lab"`). Set `type: "nearby"` for each. Include the full address in `notes`. Do NOT create a single aggregate row named "Google Maps".
 
 ### recommended
 

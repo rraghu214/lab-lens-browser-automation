@@ -1,0 +1,607 @@
+{
+  "run_id": "bc_f847b9ef",
+  "goal": "Thyroid Profile (T3, T4, TSH) price",
+  "locality": "Koramangala, Bangalore",
+  "started": "2026-06-14T10:19:32.776480",
+  "log_lines": [
+    "\u25b6 LabLens combined run bc_f847b9ef  [best-of composite]",
+    "  Goal: Thyroid Profile (T3, T4, TSH) price",
+    "  Locality: Koramangala, Bangalore (pincode: 560095)",
+    "  Sources: 4  (stitched from best individual runs)",
+    "  Metropolis  \u2190  run e6fc2806  |  layer2b  |  1 turn  |  no price retrieved",
+    "  1mg         \u2190  run e6fc2806  |  layer2b  |  9 turns  |  \u20b9439 (screenshot-confirmed, 20% off \u20b9550)",
+    "  Practo      \u2190  run 20a832f2  |  layer2b  |  4 turns  |  \u20b9420 extracted",
+    "  Google Maps \u2190  run e6fc2806  |  layer3   |  1 turn   |  3 labs found",
+    "\u2713 Distiller complete (manual composite)",
+    "\u2713 Recommended: Practo \u2014 \u20b9420 with free home collection, no coupon needed. 1mg at \u20b9439 is close; use coupon 1MGHEWG for ~15% off."
+  ],
+  "sources": [
+    {
+      "name": "Metropolis",
+      "layer": "layer2b",
+      "success": false,
+      "blocked": false,
+      "turn_log": [
+        {
+          "turn": 1,
+          "elements": 0,
+          "thinking": "The goal requires me to search for 'Thyroid Profile' in the test search box. I must first address Step 1, which involves checking for and closing a popup titled 'Get a call back now!'. Element [1] is this button.",
+          "actions": [
+            {
+              "type": "click",
+              "mark": 1
+            }
+          ],
+          "outcomes": [
+            "ok"
+          ],
+          "provider": "ollama",
+          "tokens_in": 2527,
+          "tokens_out": 79,
+          "latency_ms": 74468,
+          "raw_png_path": null,
+          "marked_path": null
+        }
+      ],
+      "extracted": {},
+      "tokens_in": 2527,
+      "tokens_out": 79,
+      "elapsed_s": 227.07,
+      "layer_path": ""
+    },
+    {
+      "name": "1mg",
+      "layer": "layer2b",
+      "success": false,
+      "blocked": false,
+      "turn_log": [
+        {
+          "turn": 1,
+          "elements": 0,
+          "thinking": "The left field shows the city input (id 14) which currently displays 'New Delhi'. We need to change it to Bangalore, so click the city input to open the dropdown.",
+          "actions": [
+            {
+              "type": "click",
+              "mark": 14
+            },
+            {
+              "type": "wait",
+              "seconds": 1
+            }
+          ],
+          "outcomes": [
+            "ok | ok"
+          ],
+          "provider": "cerebras",
+          "tokens_in": 2095,
+          "tokens_out": 149,
+          "latency_ms": 1438,
+          "raw_png_path": null,
+          "marked_path": null
+        },
+        {
+          "turn": 2,
+          "elements": 0,
+          "thinking": "The city is not confirmed as Bangalore yet, so click the 'Bangalore' option from the city dropdown to set the city to Bangalore.",
+          "actions": [
+            {
+              "type": "click",
+              "mark": 35
+            }
+          ],
+          "outcomes": [
+            "ok"
+          ],
+          "provider": "github",
+          "tokens_in": 2285,
+          "tokens_out": 44,
+          "latency_ms": 4061,
+          "raw_png_path": null,
+          "marked_path": null
+        },
+        {
+          "turn": 3,
+          "elements": 0,
+          "thinking": "Click the left 'Search city' field to check if the city is Bangalore or to change it to Bangalore if needed.",
+          "actions": [
+            {
+              "type": "click",
+              "mark": 14
+            }
+          ],
+          "outcomes": [
+            "error: no element with mark 14"
+          ],
+          "provider": "github",
+          "tokens_in": 1859,
+          "tokens_out": 40,
+          "latency_ms": 4182,
+          "raw_png_path": null,
+          "marked_path": null
+        },
+        {
+          "turn": 4,
+          "elements": 0,
+          "thinking": "City already Bangalore, so proceed to test search. Click the right search field and type 'Thyroid Profile' to trigger dropdown.",
+          "actions": [
+            {
+              "type": "click",
+              "mark": 15
+            },
+            {
+              "type": "type",
+              "mark": 15,
+              "value": "Thyroid Profile",
+              "clear": true
+            }
+          ],
+          "outcomes": [
+            "ok | ok"
+          ],
+          "provider": "openrouter",
+          "tokens_in": 1839,
+          "tokens_out": 454,
+          "latency_ms": 7551,
+          "raw_png_path": null,
+          "marked_path": null
+        },
+        {
+          "turn": 5,
+          "elements": 0,
+          "thinking": "Left field already shows Bangalore, so skip city step. Right field currently shows 'Thyroid Profile' (maybe prefilled). Need to click it to focus and trigger dropdown, then select the specific test.",
+          "actions": [
+            {
+              "type": "click",
+              "mark": 15
+            },
+            {
+              "type": "wait",
+              "seconds": 1
+            }
+          ],
+          "outcomes": [
+            "ok | ok"
+          ],
+          "provider": "openrouter",
+          "tokens_in": 1854,
+          "tokens_out": 863,
+          "latency_ms": 14867,
+          "raw_png_path": null,
+          "marked_path": null
+        },
+        {
+          "turn": 6,
+          "elements": 0,
+          "thinking": "Click the first dropdown item 'Thyroid Profile Total (T3, T4 & TSH)' as per instructions to select the test.",
+          "actions": [
+            {
+              "type": "click",
+              "mark": 16
+            }
+          ],
+          "outcomes": [
+            "ok"
+          ],
+          "provider": "github",
+          "tokens_in": 2197,
+          "tokens_out": 45,
+          "latency_ms": 3729,
+          "raw_png_path": null,
+          "marked_path": null
+        },
+        {
+          "turn": 7,
+          "elements": 0,
+          "thinking": "Check the city selection field to confirm if it is set to Bangalore or needs to be changed.",
+          "actions": [
+            {
+              "type": "click",
+              "mark": 15
+            }
+          ],
+          "outcomes": [
+            "ok"
+          ],
+          "provider": "github",
+          "tokens_in": 1894,
+          "tokens_out": 35,
+          "latency_ms": 3930,
+          "raw_png_path": null,
+          "marked_path": null
+        },
+        {
+          "turn": 8,
+          "elements": 0,
+          "thinking": "The test search dropdown is visible with the desired item as element 17. Clicking it will navigate to the product page where the price can be extracted.",
+          "actions": [
+            {
+              "type": "click",
+              "mark": 17
+            }
+          ],
+          "outcomes": [
+            "ok"
+          ],
+          "provider": "cerebras",
+          "tokens_in": 2377,
+          "tokens_out": 343,
+          "latency_ms": 1635,
+          "raw_png_path": null,
+          "marked_path": null
+        },
+        {
+          "turn": 9,
+          "elements": 0,
+          "thinking": "Scroll down to check for the price and test details on the product page as per the goal instructions.",
+          "actions": [
+            {
+              "type": "scroll",
+              "direction": "down",
+              "amount": 300
+            }
+          ],
+          "outcomes": [
+            "ok"
+          ],
+          "provider": "github",
+          "tokens_in": 2275,
+          "tokens_out": 40,
+          "latency_ms": 3660,
+          "raw_png_path": null,
+          "marked_path": null
+        }
+      ],
+      "extracted": {},
+      "tokens_in": 18675,
+      "tokens_out": 2013,
+      "elapsed_s": 98.18,
+      "layer_path": ""
+    },
+    {
+      "name": "Practo",
+      "layer": "layer2b",
+      "success": true,
+      "blocked": false,
+      "turn_log": [
+        {
+          "turn": 1,
+          "elements": 0,
+          "thinking": "Page loaded but no interactive elements visible yet; need to wait for the search box to appear.",
+          "actions": [
+            {
+              "type": "wait",
+              "seconds": 2
+            }
+          ],
+          "outcomes": [
+            "ok"
+          ],
+          "provider": "openrouter",
+          "tokens_in": 755,
+          "tokens_out": 189,
+          "latency_ms": 7035,
+          "raw_png_path": null,
+          "marked_path": null
+        },
+        {
+          "turn": 2,
+          "elements": 0,
+          "thinking": "No interactive elements are currently listed, likely the page is still loading. Wait briefly before checking again.",
+          "actions": [
+            {
+              "type": "wait",
+              "seconds": 2
+            }
+          ],
+          "outcomes": [
+            "ok"
+          ],
+          "provider": "cerebras",
+          "tokens_in": 1178,
+          "tokens_out": 158,
+          "latency_ms": 1271,
+          "raw_png_path": null,
+          "marked_path": null
+        },
+        {
+          "turn": 3,
+          "elements": 0,
+          "thinking": "Page may still be loading; we need to wait for interactive elements to appear before we can check city or search box.",
+          "actions": [
+            {
+              "type": "wait",
+              "seconds": 2
+            }
+          ],
+          "outcomes": [
+            "ok"
+          ],
+          "provider": "openrouter",
+          "tokens_in": 769,
+          "tokens_out": 182,
+          "latency_ms": 18915,
+          "raw_png_path": null,
+          "marked_path": null
+        },
+        {
+          "turn": 4,
+          "elements": 0,
+          "thinking": "City is already Bangalore. The search results already show Thyroid Profile with price \u20b9420 in element [6]. According to rules, if price visible in search results list, call done immediately without clicking. We'll extract price and note other visible results.",
+          "actions": [
+            {
+              "type": "done",
+              "success": true,
+              "note": "Price: \u20b9420. Home collection: unknown. TAT hours: unknown. Test parameters: unknown. Rating: unknown. Other results: Complete Blood Count \u20b9330, Lipid Profile \u20b9620, Liver Function Test \u20b9790."
+            }
+          ],
+          "outcomes": [
+            "done(True)"
+          ],
+          "provider": "openrouter",
+          "tokens_in": 1298,
+          "tokens_out": 913,
+          "latency_ms": 8687,
+          "raw_png_path": null,
+          "marked_path": null
+        }
+      ],
+      "extracted": {
+        "content": "AGENT EXTRACTED:\nPrice: \u20b9420. Home collection: unknown. TAT hours: unknown. Test parameters: unknown. Rating: unknown. Other results: Complete Blood Count \u20b9330, Lipid Profile \u20b9620, Liver Function Test \u20b9790.\n\nPAGE TEXT:\nGet reports within 24hrs\nHow it works?\nBook tests & packages\nHome sample collection\nReports in practo app\nWhy Book With Us?\nFREE home\nsample collection\nE reports\nin 24 hrs\nOffers &\naffordable prices\nWe do great\n15 Million users every month\nTrusted by 2,00,000 healthcare professionals\nWe serve in 9 cities\nBook Diagnostic tests near you with Practo Associate Labs, your online lab test service provider for diagnostic, medical tests and health checkup packages\nGet all the benefits of diagnostic centre and pathology labs right from the comfort of your home. With a phlebotomy team to ensure speedy home sample collection, and diagnostic services ranging from individual tests to complete health checkup packages for Men, Women, Senior Citizens & Corporates. Practo Associate Labs takes care of all your diagnostic needs.\nWide Selection of Tests: Practo Associate Labs covers a wide array of tests like blood sugar tests, thyroid tests, pregnancy tests, allergy tests, lipid profile, liver profile, platelet count, VDRL test, vitamin B12 deficiency test and more. Get details of all these tests such as blood test cost, when to take the tests, why it is required, who should take the test and what to do before taking the blood tests at home.\nSample Collection at Home: Book blood tests online from your home and our expert team of Practo Associate Labs technicians will arrive at the pre-scheduled time to pick up your sample. Once you get a diagnostic test done, you will receive your reports online.\nDigital Reports: Get all your diagnostic reports emailed directly to you with detailed blood test reports & secure storage to easily access your medical records online.\nFull Body Health Checkup: Keep your health and well being in check with exclusive Health Checkup Packages like Men\u2019s Health Package, Women\u2019s Health Package, Vitamin Package, Health Package for Corporates, Diabetes Packages, Packages for Senior Citizens & more. Get full details of all tests available in a package when booking online pathology tests.\nPracto Associate Labs provides services to the following cities: Bangalore, Hyderabad, Chennai, Mumbai, Delhi, Pune, Kolkata, Navi Mumbai, Thane, Gurgaon, Noida, Ahmedabad, Chandigarh, Ghaziabad, Indore, Jaipur, Lucknow, Patna, Ernakulam, Bhubaneswar and Coimbatore."
+      },
+      "tokens_in": 4000,
+      "tokens_out": 1442,
+      "elapsed_s": 56.1,
+      "layer_path": "Layer 1 \u2192 Layer 2b"
+    },
+    {
+      "name": "Google Maps",
+      "layer": "layer3",
+      "success": true,
+      "blocked": false,
+      "turn_log": [
+        {
+          "turn": 1,
+          "elements": 0,
+          "thinking": "The goal requires extracting specific details (name, rating, reviews, address, price/hours) for the top 3-5 labs from the visible left panel. I will extract this information manually based on the provided text and structure, as clicking or typing is explicitly forbidden by the instructions (",
+          "actions": [
+            {
+              "type": "done",
+              "success": true,
+              "note": "Extracted details for the top 3-5 labs from the left panel:\n\n1. Orange Health Labs (Top Result):\n   - Name: Orange Health Labs | Full Body Checkup & Diagnostic Centre in Koramangala\n   - Rating: 4.9 stars\n   - Reviews: Not explicitly visible, but implied by rating.\n   - Address: 1st block, 259, 1st Main Rd (from [32])\n   - Hours/Status: Open \u00b7 Closes 1:30 pm \u00b7 Reopens 2 pm (from [34])\n   - Price: Not visible.\n\n2. Mediclive Diagnostics:\n   - Name: Mediclive Diagnostics | Blood Test, ECG, Liver Test, Thyroid Profile, Health Che\n   - Rating: 4.8 stars (from [53])\n   - Reviews: Not explicitly visible.\n   - Address: #564, 16th Main Road, 13th Cross Rd, near Oxford College (from [60])\n   - Hours/Status: Open \u00b7 Closes 2 pm (from [62])\n   - Price: Not visible.\n\n3. Neuberg Anand Reference Laboratory:\n   - Name: Neuberg Anand Reference Laboratory - Kormangala offers Diagnostics, Lab Tests, B\n   - Rating: 4.8 stars (from [67])\n   - Reviews: Not explicitly visible.\n   - Address: Ground floor, 675 /A, opp. BDA complex (from [75])\n   - Hours/Status: Open \u00b7 Closes 2 pm (from [77])\n   - Price: Not visible."
+            }
+          ],
+          "outcomes": [
+            "done(True)"
+          ],
+          "provider": "ollama",
+          "tokens_in": 1975,
+          "tokens_out": 491,
+          "latency_ms": 152099,
+          "raw_png_path": null,
+          "marked_path": null
+        }
+      ],
+      "extracted": {
+        "content": "AGENT EXTRACTED:\nExtracted details for the top 3-5 labs from the left panel:\n\n1. Orange Health Labs (Top Result):\n   - Name: Orange Health Labs | Full Body Checkup & Diagnostic Centre in Koramangala\n   - Rating: 4.9 stars\n   - Reviews: Not explicitly visible, but implied by rating.\n   - Address: 1st block, 259, 1st Main Rd (from [32])\n   - Hours/Status: Open \u00b7 Closes 1:30 pm \u00b7 Reopens 2 pm (from [34])\n   - Price: Not visible.\n\n2. Mediclive Diagnostics:\n   - Name: Mediclive Diagnostics | Blood Test, ECG, Liver Test, Thyroid Profile, Health Che\n   - Rating: 4.8 stars (from [53])\n   - Reviews: Not explicitly visible.\n   - Address: #564, 16th Main Road, 13th Cross Rd, near Oxford College (from [60])\n   - Hours/Status: Open \u00b7 Closes 2 pm (from [62])\n   - Price: Not visible.\n\n3. Neuberg Anand Reference Laboratory:\n   - Name: Neuberg Anand Reference Laboratory - Kormangala offers Diagnostics, Lab Tests, B\n   - Rating: 4.8 stars (from [67])\n   - Reviews: Not explicitly visible.\n   - Address: Ground floor, 675 /A, opp. BDA complex (from [75])\n   - Hours/Status: Open \u00b7 Closes 2 pm (from [77])\n   - Price: Not visible.\n\nPAGE TEXT:\nOrange Health Labs | Full Body Checkup & Diagnostic Centre in Koramangala\n Medical laboratory  1st block, 259, 1st Main Rd\nOpen \u00b7 Closes 1:30\u202fpm \u00b7 Reopens 2\u202fpm  063669 67134\nYou're seeing a limited view of Google Maps. \nGet the most out of Google Maps\nUnavailable\nMap data \u00a92026 \nGoogle apps"
+      },
+      "tokens_in": 1975,
+      "tokens_out": 491,
+      "elapsed_s": 159.04,
+      "layer_path": "Layer 1 \u2192 Layer 3"
+    }
+  ],
+  "cost": [
+    {
+      "source": "Metropolis",
+      "layer": "layer2b",
+      "turns": 1,
+      "tok_in": 2527,
+      "tok_out": 79,
+      "blocked": false,
+      "elapsed_s": 227.07,
+      "layer_path": ""
+    },
+    {
+      "source": "1mg",
+      "layer": "layer2b",
+      "turns": 9,
+      "tok_in": 18675,
+      "tok_out": 2013,
+      "blocked": false,
+      "elapsed_s": 98.18,
+      "layer_path": ""
+    },
+    {
+      "source": "Practo",
+      "layer": "layer2b",
+      "turns": 4,
+      "tok_in": 4000,
+      "tok_out": 1442,
+      "blocked": false,
+      "elapsed_s": 56.1,
+      "layer_path": "Layer 1 \u2192 Layer 2b"
+    },
+    {
+      "source": "Google Maps",
+      "layer": "layer3",
+      "turns": 1,
+      "tok_in": 1975,
+      "tok_out": 491,
+      "blocked": false,
+      "elapsed_s": 159.04,
+      "layer_path": "Layer 1 \u2192 Layer 3"
+    }
+  ],
+  "dag_plan": {
+    "nodes": [
+      "Planner",
+      "Browser:Metropolis",
+      "Browser:1mg",
+      "Browser:Practo",
+      "Browser:Google Maps",
+      "Distiller",
+      "Formatter"
+    ],
+    "edges": [
+      [
+        "Planner",
+        "Browser:Metropolis"
+      ],
+      [
+        "Planner",
+        "Browser:1mg"
+      ],
+      [
+        "Planner",
+        "Browser:Practo"
+      ],
+      [
+        "Planner",
+        "Browser:Google Maps"
+      ],
+      [
+        "Browser:Metropolis",
+        "Distiller"
+      ],
+      [
+        "Browser:1mg",
+        "Distiller"
+      ],
+      [
+        "Browser:Practo",
+        "Distiller"
+      ],
+      [
+        "Browser:Google Maps",
+        "Distiller"
+      ],
+      [
+        "Distiller",
+        "Formatter"
+      ]
+    ]
+  },
+  "comparison_rows": [
+    {
+      "provider": "Metropolis",
+      "type": "online",
+      "price": null,
+      "price_note": "",
+      "home_collection": false,
+      "walk_in": false,
+      "tat_hours": null,
+      "rating": null,
+      "review_count": null,
+      "parameters": [
+        "T3",
+        "T4",
+        "TSH"
+      ],
+      "tsh_type": "standard",
+      "backend_lab": "",
+      "notes": "City picker overlay blocked test search; price not retrieved.",
+      "blocked": false
+    },
+    {
+      "provider": "1mg",
+      "type": "online",
+      "price": 439,
+      "price_note": "20% off \u20b9550. Observed in browser screenshot (turn 9); coupon 1MGHEWG gives additional 15% off.",
+      "home_collection": true,
+      "walk_in": false,
+      "tat_hours": 12,
+      "rating": null,
+      "review_count": null,
+      "parameters": [
+        "T3",
+        "T4",
+        "TSH"
+      ],
+      "tsh_type": "standard",
+      "backend_lab": "Tata 1mg Labs",
+      "notes": "Thyroid Profile Total (T3, T4 & TSH). Price \u20b9439 (20% off \u20b9550) confirmed visually on product page. Conducted by Tata 1mg Labs. Reports in 12 hours.",
+      "blocked": false
+    },
+    {
+      "provider": "Practo",
+      "type": "online",
+      "price": 420,
+      "price_note": "",
+      "home_collection": true,
+      "walk_in": false,
+      "tat_hours": 24,
+      "rating": null,
+      "review_count": null,
+      "parameters": [
+        "T3",
+        "T4",
+        "TSH"
+      ],
+      "tsh_type": "standard",
+      "backend_lab": "",
+      "notes": "Free home sample collection; reports within 24 hrs.",
+      "blocked": false
+    },
+    {
+      "provider": "Orange Health Labs",
+      "type": "nearby",
+      "price": null,
+      "price_note": "",
+      "home_collection": false,
+      "walk_in": true,
+      "tat_hours": null,
+      "rating": 4.9,
+      "review_count": null,
+      "parameters": [
+        "T3",
+        "T4",
+        "TSH"
+      ],
+      "tsh_type": "standard",
+      "backend_lab": "",
+      "notes": "Address: 1st block, 259, 1st Main Rd. Hours: Open \u00b7 Closes 1:30 pm \u00b7 Reopens 2 pm. Phone: 063669 67134.",
+      "blocked": false
+    },
+    {
+      "provider": "Mediclive Diagnostics",
+      "type": "nearby",
+      "price": null,
+      "price_note": "",
+      "home_collection": false,
+      "walk_in": true,
+      "tat_hours": null,
+      "rating": 4.8,
+      "review_count": null,
+      "parameters": [
+        "T3",
+        "T4",
+        "TSH"
+      ],
+      "tsh_type": "standard",
+      "backend_lab": "",
+      "notes": "Address: #564, 16th Main Road, 13th Cross Rd, near Oxford College. Hours: Open \u00b7 Closes 2 pm.",
+      "blocked": false
+    },
+    {
+      "provider": "Neuberg Anand Reference Laboratory",
+      "type": "nearby",
+      "price": null,
+      "price_note": "",
+      "home_collection": false,
+      "walk_in": true,
+      "tat_hours": null,
+      "rating": 4.8,
+      "review_count": null,
+      "parameters": [
+        "T3",
+        "T4",
+        "TSH"
+      ],
+      "tsh_type": "standard",
+      "backend_lab": "",
+      "notes": "Address: Ground floor, 675/A, opp. BDA complex. Hours: Open \u00b7 Closes 2 pm.",
+      "blocked": false
+    }
+  ],
+  "insights": "## Key findings\n\n- **1mg** lists Thyroid Profile Total (T3, T4 & TSH) at **\u20b9439** (20% off \u20b9550), conducted by Tata 1mg Labs with reports in 12 hours and home collection available. Coupon code 1MGHEWG gives an additional 15% off, reducing the effective price to ~\u20b9373.\n- **Practo** lists the same test at **\u20b9420** with free home sample collection and 24-hour report turnaround.\n- **Metropolis** navigation was blocked by the city picker overlay; no price retrieved.\n- Nearby labs visible on Google Maps near Koramangala: Orange Health Labs (4.9\u2605, 1st Main Rd), Mediclive Diagnostics (4.8\u2605, 16th Main Rd), Neuberg Anand Reference Laboratory (4.8\u2605, opp. BDA complex). None show prices in map listings.\n\n## Watch out for\n\n- 1mg\u2019s \u20b9439 is already discounted (20% off). The additional 15% coupon (1MGHEWG) is user-applied \u2014 verify it is still valid at checkout.\n- Practo\u2019s \u20b9420 is the lowest confirmed price with no coupon dependency.\n- Walk-in pricing at nearby labs is not publicly listed; call ahead for a quote.\n\n## Recommendation\n\n**Practo at \u20b9420** is the most straightforward choice \u2014 lowest confirmed price, free home collection, 24-hour reports. **1mg at \u20b9439** is a close second and beats Practo if you apply the 15% coupon (\u20b9373 effective). Both platforms use home collection; choose based on coupon availability and preferred app."
+}

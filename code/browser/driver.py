@@ -362,11 +362,23 @@ class A11yDriver(BaseDriver):
             (d / f"turn_{turn:02d}_raw.png").write_bytes(raw_png)
             (d / f"turn_{turn:02d}_legend.txt").write_text(snap.legend(), encoding="utf-8")
 
+        # Include a snippet of the page's visible text so the agent can read
+        # static content (prices, descriptions) that aren't interactive elements.
+        page_text_snippet = ""
+        try:
+            raw_text = await self.page.inner_text("body", timeout=3000)
+            cleaned = " ".join(raw_text.split())
+            if cleaned:
+                page_text_snippet = f"\nPAGE TEXT (first 1500 chars):\n{cleaned[:1500]}\n"
+        except Exception:
+            pass
+
         prompt = (
             f"GOAL: {self.config.goal}\n\n"
             f"PAGE URL: {self.page.url}\n"
             f"VIEWPORT: {snap.viewport_w}x{snap.viewport_h}\n"
-            f"INTERACTIVE ELEMENTS ({len(snap.elements)}):\n{snap.legend()}\n\n"
+            f"INTERACTIVE ELEMENTS ({len(snap.elements)}):\n{snap.legend()}\n"
+            f"{page_text_snippet}\n"
             f"RECENT ACTIONS:\n{self._history_text()}\n\n"
             f"What is the next set of actions? Names are your only guide — "
             f"no screenshot is available."

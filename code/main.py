@@ -276,9 +276,35 @@ async def run_agent(goal, locality, opts, log_panel, results_panel, query_panel)
         query_panel.set_running(False)
 
 
+def _backfill_screenshot_paths(run_id: str, trace, base: pathlib.Path) -> None:
+    """Populate null raw_png_path/marked_path in TurnRecords by scanning the artifact folder."""
+    for source in (trace.sources or []):
+        src_dir = base / run_id / source.name.lower().replace(" ", "_")
+        if not src_dir.exists():
+            continue
+        pngs: dict[int, dict] = {}
+        for png in src_dir.rglob("turn_*_*.png"):
+            parts = png.stem.split("_")
+            if len(parts) >= 3:
+                try:
+                    n = int(parts[1])
+                    kind = parts[2]  # "raw" or "marked"
+                    rel = "run_artifacts/" + png.relative_to(base).as_posix()
+                    if n not in pngs:
+                        pngs[n] = {}
+                    pngs[n][kind] = rel
+                except (ValueError, IndexError):
+                    pass
+        for tr in (source.turn_log or []):
+            d = pngs.get(tr.turn, {})
+            if not tr.marked_path and "marked" in d:
+                tr.marked_path = d["marked"]
+            if not tr.raw_png_path and "raw" in d:
+                tr.raw_png_path = d["raw"]
+
+
 async def load_replay_from_disk(run_id: str, log_panel, results_panel) -> None:
     from run_trace import RunTrace
-    import pathlib
 
     path = pathlib.Path(f"./run_artifacts/{run_id}/replay.json")
     if not path.exists():
@@ -286,6 +312,8 @@ async def load_replay_from_disk(run_id: str, log_panel, results_panel) -> None:
         return
     try:
         trace = RunTrace.load(str(path))
+        # Backfill screenshot paths (old runs saved null paths)
+        _backfill_screenshot_paths(run_id, trace, pathlib.Path("./run_artifacts"))
         log_panel.clear()
         if trace.log_lines:
             for line in trace.log_lines:
@@ -299,7 +327,16 @@ async def load_replay_from_disk(run_id: str, log_panel, results_panel) -> None:
             log_panel.push(f"  Sources: {len(trace.sources)}")
         log_panel.set_status("COMPLETE")
         results_panel.clear()
+        from agent_runner import ONLINE_SOURCES, NEARBY_SOURCES
+        _online_names = {s["name"] for s in ONLINE_SOURCES}
+        _nearby_names = {s["name"] for s in NEARBY_SOURCES}
         for row in (trace.comparison_rows or []):
+            row = dict(row)
+            if row.get("provider") in _online_names:
+                row["type"] = "online"
+            elif row.get("provider") in _nearby_names:
+                row["type"] = "nearby"
+            # else: trust distiller (individual labs from Google Maps keep type="nearby")
             results_panel.add_row(row)
         results_panel.set_insights(trace.insights or "")
         results_panel.set_replay(trace)

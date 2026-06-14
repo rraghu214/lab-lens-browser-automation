@@ -1,0 +1,105 @@
+[1]<button>Get a call back now!</button>
+[2]<a>080-4891-1400</a>
+[3]<a role="button">about</a>
+[4]<a role="button">doctors</a>
+[5]<a role="button">partners</a>
+[6]<a role="button">corporate</a>
+[7]<a role="button">careers</a>
+[8]<a role="button">truhealth-blog</a>
+[9]<a role="button">find-centers</a>
+[10]<a>logo</a>
+[11]<button>Search City</button>
+[12]<input>Search for Tests, Health Checkups</input>
+[13]<a>Contact</a>
+[14]<a>Contact</a>
+[15]<button>Country Dropdown</button>
+[16]<a>Play-Store</a>
+[17]<a>App-Store</a>
+[18]<a>Health-Risk</a>
+[19]<a>Health-Risk</a>
+[20]<a>Health-Risk</a>
+[21]<a>Health-Risk</a>
+[22]<a>Health-Risk</a>
+[23]<a>View-All</a>
+[24]<a>Health-Conditions</a>
+[25]<a>Health-Conditions</a>
+[26]<a>Health-Conditions</a>
+[27]<a>Health-Conditions</a>
+[28]<a>Health-Conditions</a>
+[29]<a>Health-Conditions</a>
+[30]<a>Health-Conditions</a>
+[31]<a>Health-Conditions</a>
+[32]<a>Health-Conditions</a>
+[33]<a>Health-Conditions</a>
+[34]<a>Health-Conditions</a>
+[35]<a>Health-Conditions</a>
+[36]<a>Health-Conditions</a>
+[37]<a>Health-Conditions</a>
+[38]<a>Health-Conditions</a>
+[39]<a>Food-Intolerance-Test</a>
+[40]<a>CBC-Test</a>
+[41]<a>Lipid-Profile-Test</a>
+[42]<a>Allergy-Panel-Test</a>
+[43]<a>Vitamin-D-Blood-Test</a>
+[44]<a>Thyroid-Test</a>
+[45]<a>HbA1C-Test-or-Glycated-Haemoglobin-Test</a>
+[46]<a>Thrombophilia-Profile-Test</a>
+[47]<a>Package-Name</a>
+[48]<a>Package-Name</a>
+[49]<a>Package-Name</a>
+[50]<a>Package-Name</a>
+[51]<a>Package-Name</a>
+[52]<a>Package-Name</a>
+[53]<a>Package-Name</a>
+[54]<a>Package-Name</a>
+[55]<a>Package-Name</a>
+[56]<a>Package-Name</a>
+[57]<a>Package-Name</a>
+[58]<a>Package-Name</a>
+[59]<a>Package-Name</a>
+[60]<a>Package-Name</a>
+[61]<a>Health-Package</a>
+[62]<a>Know-Our-Experts</a>
+[63]<a>centre-of-genomics/Nephrology</a>
+[64]<a>centre-of-genomics/oncology</a>
+[65]<a>centre-of-genomics/women</a>
+[66]<a>centre-of-genomics/gastroenterology</a>
+[67]<a>centre-of-genomics/neurology</a>
+[68]<a>centre-of-genomics-endocrinology</a>
+[69]<a>centre-of-genomics</a>
+[70]<a>Home-Visit</a>
+[71]<a>Upload</a>
+[72]<a>Sample-Tracking</a>
+[73]<a>Download-Report</a>
+[74]<a>Login</a>
+[75]<button>Shopping-Cart</button>
+[76]<a>Home</a>
+[77]<a>Thyroid Profile Test</a>
+[78]<a>Test Details</a>
+[79]<a>Test Overview</a>
+[80]<a>FAQ's</a>
+[81]<a>Reviews</a>
+[82]<a></a>
+[83]<button>Add to cart</button>
+[84]<button>Get Instant Call Back</button>
+[85]<a>SARS- CoV-2 (COVID 19) RNA Detection by RT-PCR, VTM Swab</a>
+[86]<button></button>
+[87]<a>NextGen : NIPT (Non-Invasive Prenatal Testing)</a>
+[88]<button></button>
+[89]<a>Food Intolerance (Food IgG) Test, Serum</a>
+[90]<button></button>
+[91]<a>CBC Haemogram, EDTA Blood</a>
+[92]<button></button>
+[93]<button></button>
+[94]<i></i>
+[95]<h4>Health Risks</h4>
+[96]<i></i>
+[97]<h4>Health Conditions</h4>
+[98]<i></i>
+[99]<h4>Blood Tests</h4>
+[100]<i></i>
+[101]<h4>Truhealth Packages</h4>
+[102]<i></i>
+[103]<h4>Specialty</h4>
+[104]<i></i>
+[105]<h4>Genomics</h4>

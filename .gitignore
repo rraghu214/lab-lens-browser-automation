@@ -13,7 +13,11 @@ logs/
 # ── LabLens run artifacts — ignore all generated run directories ──────────────
 # Each run creates code/run_artifacts/{run_id}/ at runtime; never commit those.
 # The parent folder is tracked via .gitkeep so the app can write into it.
-code/run_artifacts/*/
+# bc_f847b9ef is the pinned demo run — intentionally committed for the README.
+code/run_artifacts/*
+!code/run_artifacts/.gitkeep
+!code/run_artifacts/bc_f847b9ef
+!code/run_artifacts/bc_f847b9ef/**
 
 # ── Agent runtime state ───────────────────────────────────────────────────────
 code/state/

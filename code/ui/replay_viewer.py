@@ -1,6 +1,34 @@
 # ui/replay_viewer.py
+import pathlib
 from nicegui import ui
 from run_trace import RunTrace, SourceResult
+
+
+def _backfill_screenshots(run_id: str, trace: RunTrace, base: pathlib.Path) -> None:
+    """Populate null raw_png_path/marked_path by scanning the run artifact folder."""
+    for source in (trace.sources or []):
+        src_dir = base / run_id / source.name.lower().replace(" ", "_")
+        if not src_dir.exists():
+            continue
+        pngs: dict[int, dict] = {}
+        for png in src_dir.rglob("turn_*_*.png"):
+            parts = png.stem.split("_")
+            if len(parts) >= 3:
+                try:
+                    n = int(parts[1])
+                    kind = parts[2]
+                    rel = "run_artifacts/" + png.relative_to(base).as_posix()
+                    if n not in pngs:
+                        pngs[n] = {}
+                    pngs[n][kind] = rel
+                except (ValueError, IndexError):
+                    pass
+        for tr in (source.turn_log or []):
+            d = pngs.get(tr.turn, {})
+            if not tr.marked_path and "marked" in d:
+                tr.marked_path = d["marked"]
+            if not tr.raw_png_path and "raw" in d:
+                tr.raw_png_path = d["raw"]
 
 _STATUS_COLOR = {"success": "green", "blocked": "orange", "failed": "red"}
 _STATUS_LABEL = {"success": "✓ success", "blocked": "⊘ blocked", "failed": "failed"}
@@ -274,6 +302,9 @@ class ReplayViewer:
             return
         try:
             trace = RunTrace.load(str(p))
+            # Backfill screenshot paths — infer run_artifacts base from the file's location
+            arts_base = p.parent.parent  # replay.json is at run_artifacts/{run_id}/replay.json
+            _backfill_screenshots(trace.run_id, trace, arts_base)
             self.load(trace)
             ui.notify(f"Loaded run {trace.run_id}", type="positive")
         except Exception as ex:

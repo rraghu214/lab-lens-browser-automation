@@ -26,34 +26,42 @@ load_env(".env")
 # ── Source catalogue ──────────────────────────────────────────────────────────
 
 ONLINE_SOURCES = [
-    # Layer 2b: popup X → city Bangalore → search → ₹600 product page
+    # Layer 2b: skip city picker (overlay not in a11y tree), go directly to test search
     {"name": "Metropolis",
      "url": "https://www.metropolisindia.com",
      "layer_hint": "layer2b",
      "wall_clock_s": 180.0,
      "extra_hint": (
-         "IMPORTANT: A popup may appear — if it does, click the X/close button in the "
-         "top-right corner of the popup to dismiss it (Escape and clicking outside do NOT work). "
-         "Then click the city shown in the header (e.g. 'Mumbai') to open the city selector "
-         "and click 'Bangalore'. "
-         "Then click the search box, type 'Thyroid Profile', and click 'Thyroid Profile - 1' "
-         "from the dropdown. On the product page extract the price (e.g. ₹600) and call done."
+         "FOLLOW THESE STEPS IN ORDER — DO NOT DEVIATE: "
+         "Step 1 (popup): A popup titled 'Get a call back now!' may appear — "
+         "click its 'Close' button to dismiss it. "
+         "IMPORTANT: After closing the popup, do NOT click the 'Search City' button or any other link. "
+         "The city picker that opens from 'Search City' is invisible to you and will waste all your turns. "
+         "Step 2 (search directly): Click the 'Search for Tests, Health Checkups' input field and type 'Thyroid Profile'. "
+         "A dropdown will appear with test name suggestions — click 'Thyroid Profile - 1' or 'Thyroid Profile Total' from it. "
+         "If no dropdown appears after typing, press key('Enter') to search. "
+         "Step 3 (price): On the product page, the price (e.g. ₹600) is visible in the PAGE TEXT. "
+         "Read it and call done immediately. Do NOT click Book or Add to Cart."
      )},
     # Layer 2b cascade demo: two-field search bar (city LEFT, test RIGHT)
     {"name": "1mg", "url": "https://www.1mg.com/labs", "layer_hint": "layer2b",
-     "wall_clock_s": 150.0,
+     "wall_clock_s": 420.0,
      "extra_hint": (
-         "A popup may appear on any screen — dismiss it by clicking the X/close button "
-         "OR clicking outside the popup (both work). "
-         "The search bar has TWO separate fields side by side: "
-         "the LEFT field is for city ('Search city'), the RIGHT field is for the test ('Search tests or full body checkups'). "
-         "Step 1: Click the LEFT 'Search city' field. A dropdown shows top cities (Delhi, Gurgaon, Pune, Bangalore). "
-         "If 'Bangalore' is already shown as the city, skip to Step 2. "
-         "Otherwise click 'Bangalore' from the list, OR type 'Bangalore' — if you type, "
-         "a sub-dropdown appears showing 'Bangalore' and 'Bangalore Rural'; click 'Bangalore' (not 'Bangalore Rural'). "
-         "Step 2: Click the RIGHT 'Search tests or full body checkups' field and type 'Thyroid Profile'. "
+         "IMPORTANT — IGNORE THE GENERIC SEARCH INSTRUCTIONS ABOVE AND FOLLOW THESE STEPS INSTEAD: "
+         "Step 0 (popup): A popup titled 'How can we help?' may appear on any screen — "
+         "dismiss it by clicking the X/close button OR clicking anywhere outside the popup (both work). "
+         "Step 1 (city): The search bar has TWO separate fields side by side — "
+         "LEFT is 'Search city', RIGHT is 'Search tests or full body checkups'. "
+         "If the LEFT field already shows 'Bangalore', skip to Step 2. "
+         "Otherwise click the LEFT 'Search city' field — a dropdown shows Delhi, Gurgaon, Pune, Bangalore. "
+         "Click 'Bangalore' directly from the list. "
+         "If you type 'Bangalore' instead, a sub-dropdown appears — click 'Bangalore' (NOT 'Bangalore Rural'). "
+         "Step 2 (test search): Click the RIGHT 'Search tests or full body checkups' field and type 'Thyroid Profile'. "
          "A dropdown appears — click 'Thyroid Profile Total (T3, T4 & TSH)' (the first result). "
-         "Step 3: You land on the product page. Extract the price shown next to 'Test price:' (e.g. ₹629) and call done immediately."
+         "Do NOT press Enter — always click the dropdown item. "
+         "Step 3 (price): You land on the product page at 1mg.com/labs/test/.... "
+         "Extract the price shown next to 'Test price:' (e.g. ₹629) and call done immediately. "
+         "Do NOT click Book or Add to Cart."
      )},
     # disabled: 4-step pincode flow too fragile
     {"name": "Thyrocare", "url": "https://www.thyrocare.com", "layer_hint": "layer2b",
@@ -177,12 +185,16 @@ def _build_turn_log(actions: list[dict], artifacts_dir: str | None = None) -> li
         raw = None
         if artifacts_dir:
             d = Path(artifacts_dir)
-            mp = d / f"turn_{turn_n:02d}_marked.png"
-            rp = d / f"turn_{turn_n:02d}_raw.png"
-            if mp.exists():
-                marked = "run_artifacts/" + "/".join(mp.parts[mp.parts.index("run_artifacts") + 1:]) if "run_artifacts" in mp.parts else str(mp).replace("\\", "/")
-            elif rp.exists():
-                raw = "run_artifacts/" + "/".join(rp.parts[rp.parts.index("run_artifacts") + 1:]) if "run_artifacts" in rp.parts else str(rp).replace("\\", "/")
+            # PNGs are nested: browser_XXXX/{a11y|vision}/turn_XX_raw.png — use rglob
+            marked_hits = sorted(d.rglob(f"turn_{turn_n:02d}_marked.png"))
+            raw_hits    = sorted(d.rglob(f"turn_{turn_n:02d}_raw.png"))
+            def _rel(p: Path) -> str:
+                return ("run_artifacts/" + "/".join(p.parts[p.parts.index("run_artifacts") + 1:])
+                        if "run_artifacts" in p.parts else str(p).replace("\\", "/"))
+            if marked_hits:
+                marked = _rel(marked_hits[0])
+            if raw_hits:
+                raw = _rel(raw_hits[0])
         records.append(TurnRecord(
             turn=turn_n,
             elements=0,
@@ -558,13 +570,17 @@ class AgentRunner:
         trace.insights        = distilled.get("insights", "")
 
         # Push distilled rows to UI (overwrite placeholder rows)
-        # Enforce type="nearby" for sources in nearby_names — the Distiller LLM
-        # sometimes returns type="online" for Google Maps / nearby sources.
+        # Override type only for known source names — individual nearby labs
+        # (e.g. "Orange Health Labs" from Google Maps) keep the distiller's type.
+        _online_names = {s["name"] for s in ONLINE_SOURCES}
         if self.on_source_complete:
             for row in trace.comparison_rows:
                 row = dict(row)
-                # Always override type from code truth (distiller prompt often sets Practo as "nearby")
-                row["type"] = "nearby" if row.get("provider") in nearby_names else "online"
+                if row.get("provider") in _online_names:
+                    row["type"] = "online"
+                elif row.get("provider") in nearby_names:
+                    row["type"] = "nearby"
+                # else: trust distiller (e.g. individual labs from Google Maps)
                 self.on_source_complete(row)
 
         rec = distilled.get("recommended", {})
@@ -628,6 +644,7 @@ class AgentRunner:
 
 def _fallback_distiller(trace: RunTrace) -> dict:
     """Generate a minimal valid distiller response when the LLM call fails."""
+    _nearby = {s["name"] for s in NEARBY_SOURCES}
     source_names = [sr.name for sr in trace.sources]
     nodes = ["Planner"] + [f"Browser:{n}" for n in source_names] + ["Distiller", "Formatter"]
     edges: list[list[str]] = (
@@ -637,7 +654,8 @@ def _fallback_distiller(trace: RunTrace) -> dict:
     )
     rows = [
         {
-            "provider": sr.name, "type": "online",
+            "provider": sr.name,
+            "type": "nearby" if sr.name in _nearby else "online",
             "price": None, "price_note": "", "home_collection": False,
             "walk_in": False, "tat_hours": None, "rating": None,
             "review_count": None, "parameters": [], "tsh_type": "standard",

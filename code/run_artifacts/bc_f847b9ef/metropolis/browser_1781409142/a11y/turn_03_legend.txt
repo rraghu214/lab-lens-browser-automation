@@ -1,0 +1,117 @@
+[1]<button>Get a call back now!</button>
+[2]<a>080-4891-1400</a>
+[3]<a role="button">about</a>
+[4]<a role="button">doctors</a>
+[5]<a role="button">partners</a>
+[6]<a role="button">corporate</a>
+[7]<a role="button">careers</a>
+[8]<a role="button">truhealth-blog</a>
+[9]<a role="button">find-centers</a>
+[10]<a>logo</a>
+[11]<button>Search City</button>
+[12]<input>Search for Tests, Health Checkups</input>
+[13]<a>Contact</a>
+[14]<a>Contact</a>
+[15]<button>Country Dropdown</button>
+[16]<a>Play-Store</a>
+[17]<a>App-Store</a>
+[18]<a>Health-Risk</a>
+[19]<a>Health-Risk</a>
+[20]<a>Health-Risk</a>
+[21]<a>Health-Risk</a>
+[22]<a>Health-Risk</a>
+[23]<a>View-All</a>
+[24]<a>Health-Conditions</a>
+[25]<a>Health-Conditions</a>
+[26]<a>Health-Conditions</a>
+[27]<a>Health-Conditions</a>
+[28]<a>Health-Conditions</a>
+[29]<a>Health-Conditions</a>
+[30]<a>Health-Conditions</a>
+[31]<a>Health-Conditions</a>
+[32]<a>Health-Conditions</a>
+[33]<a>Health-Conditions</a>
+[34]<a>Health-Conditions</a>
+[35]<a>Health-Conditions</a>
+[36]<a>Health-Conditions</a>
+[37]<a>Health-Conditions</a>
+[38]<a>Health-Conditions</a>
+[39]<a>Food-Intolerance-Test</a>
+[40]<a>CBC-Test</a>
+[41]<a>Lipid-Profile-Test</a>
+[42]<a>Allergy-Panel-Test</a>
+[43]<a>Vitamin-D-Blood-Test</a>
+[44]<a>Thyroid-Test</a>
+[45]<a>HbA1C-Test-or-Glycated-Haemoglobin-Test</a>
+[46]<a>Thrombophilia-Profile-Test</a>
+[47]<a>Package-Name</a>
+[48]<a>Package-Name</a>
+[49]<a>Package-Name</a>
+[50]<a>Package-Name</a>
+[51]<a>Package-Name</a>
+[52]<a>Package-Name</a>
+[53]<a>Package-Name</a>
+[54]<a>Package-Name</a>
+[55]<a>Package-Name</a>
+[56]<a>Package-Name</a>
+[57]<a>Package-Name</a>
+[58]<a>Package-Name</a>
+[59]<a>Package-Name</a>
+[60]<a>Package-Name</a>
+[61]<a>Health-Package</a>
+[62]<a>Know-Our-Experts</a>
+[63]<a>centre-of-genomics/Nephrology</a>
+[64]<a>centre-of-genomics/oncology</a>
+[65]<a>centre-of-genomics/women</a>
+[66]<a>centre-of-genomics/gastroenterology</a>
+[67]<a>centre-of-genomics/neurology</a>
+[68]<a>centre-of-genomics-endocrinology</a>
+[69]<a>centre-of-genomics</a>
+[70]<a>Home-Visit</a>
+[71]<a>Upload</a>
+[72]<a>Sample-Tracking</a>
+[73]<a>Download-Report</a>
+[74]<a>Login</a>
+[75]<button>Shopping-Cart</button>
+[76]<button>Previous slide</button>
+[77]<button>Next slide</button>
+[78]<a></a>
+[79]<input>Search and book</input>
+[80]<input>Enter Area</input>
+[81]<a>find-center</a>
+[82]<button role="tab">All</button>
+[83]<button role="tab">nav-button</button>
+[84]<button role="tab">nav-button</button>
+[85]<a>health-package</a>
+[86]<a>truhelath-package</a>
+[87]<a>truhelath-package</a>
+[88]<a>truhelath-package</a>
+[89]<a>truhelath-package</a>
+[90]<a>truhelath-package</a>
+[91]<a>truhelath-package</a>
+[92]<a>truhelath-package</a>
+[93]<a>truhelath-package</a>
+[94]<a>truhelath-package</a>
+[95]<button role="presentation"></button>
+[96]<button role="presentation"></button>
+[97]<button>Close</button>
+[98]<a>telephone</a>
+[99]<input>popup_enq_name</input>
+[100]<input>Please enter exactly 10 digits</input>
+[101]<button>Submit</button>
+[102]<input>yes</input>
+[103]<a>t&c</a>
+[104]<a>privacy-policy</a>
+[105]<i></i>
+[106]<h4>Health Risks</h4>
+[107]<i></i>
+[108]<h4>Health Conditions</h4>
+[109]<i></i>
+[110]<h4>Blood Tests</h4>
+[111]<i></i>
+[112]<h4>Truhealth Packages</h4>
+[113]<i></i>
+[114]<h4>Specialty</h4>
+[115]<i></i>
+[116]<h4>Genomics</h4>
+[117]<img>trigger</img>

@@ -12,6 +12,9 @@ usage.json
 run_artifacts/**/*.png
 run_artifacts/**/*.json
 !run_artifacts/.gitkeep
+# bc_f847b9ef is the pinned demo run — intentionally committed
+!run_artifacts/bc_f847b9ef/**/*.png
+!run_artifacts/bc_f847b9ef/**/*.json
 
 # python
 __pycache__/

@@ -46,12 +46,12 @@ class RunTrace:
     insights:        str                = ""
 
     def save(self, path: str) -> None:
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             json.dump(asdict(self), f, indent=2)
 
     @classmethod
     def load(cls, path: str) -> "RunTrace":
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
         data["sources"] = [
             SourceResult(
